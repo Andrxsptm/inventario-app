@@ -1,0 +1,108 @@
+// This is your Prisma schema file
+// Run: npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  nombre    String
+  rol       String   @default("VENDEDOR") // ADMINISTRADOR | VENDEDOR
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  ventas    Venta[]
+}
+
+model Proveedor {
+  id        Int       @id @default(autoincrement())
+  nombre    String
+  telefono  String?
+  correo    String?
+  direccion String?
+  notas     String?
+  activo    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  productos Producto[]
+  compras   OrdenCompra[]
+}
+
+model Producto {
+  id           Int       @id @default(autoincrement())
+  nombre       String
+  precioCompra Float
+  precioVenta  Float
+  stockActual  Int       @default(0)
+  stockMinimo  Int       @default(5)
+  activo       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  proveedorId  Int
+  proveedor    Proveedor @relation(fields: [proveedorId], references: [id])
+  itemsVenta   ItemVenta[]
+  itemsCompra  ItemOrdenCompra[]
+}
+
+model Cliente {
+  id             Int      @id @default(autoincrement())
+  nombre         String
+  telefono       String?
+  correo         String?
+  direccion      String?
+  totalCompras   Float    @default(0)
+  activo         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  ventas         Venta[]
+}
+
+model Venta {
+  id          Int         @id @default(autoincrement())
+  fecha       DateTime    @default(now())
+  total       Float
+  estado      String      @default("COMPLETADA") // COMPLETADA | ANULADA
+  notas       String?
+  usuarioId   Int
+  usuario     User        @relation(fields: [usuarioId], references: [id])
+  clienteId   Int?
+  cliente     Cliente?    @relation(fields: [clienteId], references: [id])
+  items       ItemVenta[]
+}
+
+model ItemVenta {
+  id          Int      @id @default(autoincrement())
+  cantidad    Int
+  precioUnit  Float
+  subtotal    Float
+  ventaId     Int
+  venta       Venta    @relation(fields: [ventaId], references: [id])
+  productoId  Int
+  producto    Producto @relation(fields: [productoId], references: [id])
+}
+
+model OrdenCompra {
+  id          Int               @id @default(autoincrement())
+  fecha       DateTime          @default(now())
+  estado      String            @default("PENDIENTE") // PENDIENTE | RECIBIDA | CANCELADA
+  total       Float             @default(0)
+  notas       String?
+  proveedorId Int
+  proveedor   Proveedor         @relation(fields: [proveedorId], references: [id])
+  items       ItemOrdenCompra[]
+}
+
+model ItemOrdenCompra {
+  id          Int         @id @default(autoincrement())
+  cantidad    Int
+  precioUnit  Float
+  subtotal    Float
+  ordenId     Int
+  orden       OrdenCompra @relation(fields: [ordenId], references: [id])
+  productoId  Int
+  producto    Producto    @relation(fields: [productoId], references: [id])
+}
