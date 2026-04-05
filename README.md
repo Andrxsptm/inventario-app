@@ -1,11 +1,9 @@
 # 📦 InvenSmart — Sistema de Gestión de Inventario
 
-Aplicación web fullstack basada en los procesos del documento  
-**Procesos_Requisitos_v2.xlsx** (RUP + ISO/IEC 25010).
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Tegnologias Stack
 
 | Capa       | Tecnología                              |
 |------------|------------------------------------------|
@@ -75,28 +73,19 @@ npm run dev                   # http://localhost:3000
 
 | Rol           | Email                      | Contraseña    |
 |---------------|----------------------------|---------------|
-| Administrador | admin@invensmart.com       | admin123      |
-| Vendedor      | vendedor@invensmart.com    | vendedor123   |
+| Administrador | admin                      | admin123      |
+| Vendedor      | vendedor                   | vendedor123   |
 
 ---
 
 ## 📋 Módulos implementados
 
-| #  | Proceso                  | Estado        |
-|----|--------------------------|---------------|
-| 1  | Autenticación por roles  | ✅ Backend + UI |
-| 2  | Gestión de proveedores   | ✅ Backend      |
-| 3  | Catálogo de productos    | ✅ Backend      |
-| 4  | Inventario + alertas     | ✅ Backend + UI |
-| 5  | Órdenes de compra        | ✅ Backend      |
-| 6  | Registro de ventas       | ✅ Backend      |
-| 7  | Comprobante de venta     | 🔧 Pendiente   |
-| 8  | Gestión de clientes      | ✅ Backend      |
-| 9  | Reportes y dashboard     | ✅ Backend + UI |
-
+Ninguno xd
 ---
 
 ## 🔌 API Endpoints principales
+
+Si es que nos sale:
 
 ```
 POST   /api/auth/login
