@@ -2,9 +2,10 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
 import {
-  DollarSign, AlertTriangle, TrendingUp, User,
+  AlertTriangle, TrendingUp, User,
   ArrowUpRight, AlertCircle, Clock,
 } from 'lucide-react'
+import { FaDollarSign } from 'react-icons/fa'
 
 /* ─── Mock data (replace with API calls) ─── */
 const salesWeek = [
@@ -38,25 +39,27 @@ const lowStock = [
   { producto: 'Nose',        cantidad: 1, precio: 1.00 },
 ]
 
-/* ─── Sub-components ─── */
+/* subcomponente: Cards */
 function KpiCard({ icon: Icon, value, label, color }) {
-  const colors = {
-    green: 'bg-green-500',
-    red:   'bg-red-500',
+  const theme = {
+    green: { border: 'border-green-500', iconBg: 'bg-green-50', iconText: 'text-green-600' },
+    red:   { border: 'border-red-500', iconBg: 'bg-red-50', iconText: 'text-red-600' }
   }
+
+  const active = theme[color] || theme.green; // green por defecto
+
   return (
-    <div className={`${colors[color]} rounded-xl p-5 text-white flex items-center gap-4 shadow-sm`}>
-      <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center shrink-0">
-        <Icon size={22} />
+    <div className={`bg-white border-2 ${active.border} rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm`}>
+      <div className={`w-10 h-10 sm:w-12 sm:h-12 ${active.iconBg} ${active.iconText} rounded-full flex items-center justify-center shrink-0`}>
+        <Icon className="text-xl sm:text-2xl" />
       </div>
-      <div>
-        <p className="text-2xl font-bold leading-tight">{value}</p>
-        <p className="text-sm opacity-90 mt-0.5">{label}</p>
+      <div className="min-w-0">
+        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 truncate">{value}</p>
+        <p className="text-xs sm:text-sm text-gray-500 truncate">{label}</p>
       </div>
     </div>
   )
 }
-
 function SectionTitle({ children }) {
   return <h2 className="text-sm font-semibold text-gray-700 mb-3">{children}</h2>
 }
@@ -71,9 +74,10 @@ export default function Dashboard() {
       {/* ── Row 1: KPIs ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KpiCard
-          icon={DollarSign}
-          value="$2,500"
+          icon={FaDollarSign}
+          value="2,500"
           label="Ventas hoy"
+          border="black"
           color="green"
         />
         <KpiCard
