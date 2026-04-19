@@ -1,4 +1,5 @@
 import { ShoppingBag, Truck, Calendar, Tag, ChevronRight } from 'lucide-react'
+import Button from '../components/common/Button'
 
 const MOCK_COMPRAS = [
   { id: 'OC-990', fecha: '2024-04-10', proveedor: 'Distribuidora Global', total: 2400.00, items: 15, estado: 'RECIBIDA' },
@@ -7,21 +8,20 @@ const MOCK_COMPRAS = [
 
 export default function Compras() {
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center bg-gray-900 p-8 rounded-3xl shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -mr-32 -mt-32" />
-        <div className="relative z-10">
-          <h1 className="text-2xl font-black text-white flex items-center gap-3">
-             <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-lg">
-                <ShoppingBag size={24} />
-             </div>
-             Ordenes de Compra
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10 uppercase tracking-tighter">
+      
+      {/* Header (Minimal Style) */}
+      <div className="flex justify-between items-center pt-2">
+        <div>
+          <h1 className="text-2xl font-black text-gray-800 flex items-center gap-3">
+             <ShoppingBag className="text-purple-500" size={28} />
+             Órdenes de Compra
           </h1>
-          <p className="text-gray-400 text-sm mt-1">Abastecimiento y logística de entrada</p>
+          <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">Abastecimiento y logística de entrada</p>
         </div>
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-2xl font-bold transition-all relative z-10">
-          + Generar Orden
-        </button>
+        <Button icon={ShoppingBag}>
+           Generar Orden
+        </Button>
       </div>
 
       <div className="space-y-4">

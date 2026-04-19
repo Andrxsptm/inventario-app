@@ -2,19 +2,20 @@ import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Package, ShoppingCart, Tag,
-  Truck, Users, ClipboardList, Settings, LogOut,
+  Truck, Users, ClipboardList, Settings, LogOut, LayoutGrid, ShoppingBag
 } from 'lucide-react'
 import { AiOutlineLeft } from "react-icons/ai"
 import logo from "../resourses/logo.png"
 
 const links = [
-  { to: '/dashboard',   icon: LayoutDashboard, label: 'Reporte' },
-  { to: '/inventario',  icon: Package, label: 'Inventario' },
-  { to: '/ventas',      icon: ShoppingCart, label: 'Ventas' },
-  { to: '/productos',   icon: Tag, label: 'Productos' },
-  { to: '/compras',     icon: ClipboardList, label: 'Compras' },
-  { to: '/proveedores', icon: Truck, label: 'Proveedores' },
-  { to: '/clientes',    icon: Users, label: 'Clientes' }
+  { path: '/dashboard',   icon: LayoutGrid,  label: 'Dashboard' },
+  { path: '/inventario',  icon: Package,     label: 'Inventario' },
+  { path: '/ventas',      icon: ShoppingCart, label: 'Ventas' },
+  { path: '/productos',   icon: Tag,          label: 'Productos' },
+  { path: '/compras',     icon: ShoppingBag,  label: 'Compras' },
+  { path: '/proveedores', icon: Truck,       label: 'Proveedores' },
+  { path: '/clientes',    icon: Users,       label: 'Clientes' },
+  { path: '/configuracion', icon: Settings,    label: 'Configuración' },
 ]
 
 export default function Sidebar() {
@@ -24,7 +25,7 @@ export default function Sidebar() {
     <aside className={`
       relative z-[100] flex flex-col h-screen bg-white
       border-r border-gray-200 py-5 shrink-0
-      transition-all duration-300 ease-in-out overflow-hidden
+      transition-all duration-300 ease-in-out
       shadow-xl shadow-gray-200/50
       ${collapsed ? 'w-[60px]' : 'w-[220px]'}
     `}>
@@ -32,12 +33,14 @@ export default function Sidebar() {
       {/* botón desplega sidebar*/}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute top-[650px] -right-[5px] z-10 w-[30px] h-[30px] rounded-s-3xl
-          bg-gray-200 border border-gray-700 flex items-center justify-center
-          hover:border-violet-600 transition-colors group shadow-sm"
+        className={`
+          absolute top-10 -right-5 z-[110] w-7 h-7 rounded-full
+          bg-white border border-gray-400 flex items-center justify-center
+          shadow-md hover:border-violet-600 transition-all duration-300 group
+        `}
       >
-        <AiOutlineLeft size={12} className={`
-          text-black group-hover:text-violet-600 transition-transform duration-300
+        <AiOutlineLeft size={10} className={`
+          text-gray-900 group-hover:text-violet-600 transition-transform duration-300
           ${collapsed ? 'rotate-180' : ''}
         `}/>
       </button>
@@ -54,11 +57,11 @@ export default function Sidebar() {
           </div>
           <div className={`flex flex-col transition-all duration-300 ${collapsed ? 'opacity-0 w-0 invisible -translate-x-4' : 'opacity-100 w-auto visible translate-x-0'}`}>
             <span className="text-gray-900 font-extrabold text-xl tracking-tighter leading-none">
-              Inventario
-              <span className="text-violet-600">xd</span>
+              Stock
+              <span className="text-violet-600">er</span>
             </span>
-            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 whitespace-nowrap">
-              Management
+            <span className="text-[15px] text-gray-400 font-bold uppercase tracking-widest mt-1 whitespace-nowrap">
+              Manager
             </span>
           </div>
         </div>
@@ -66,10 +69,10 @@ export default function Sidebar() {
 
       {/* Nav principal */}
       <nav className="flex flex-col gap-0.5 px-2 flex-1">
-        {links.map(({ to, icon: Icon, label }) => (
+        {links.map(({ path, icon: Icon, label }) => (
           <NavLink
-            key={to}
-            to={to}
+            key={path}
+            to={path}
             className={({ isActive }) => `
               relative flex items-center rounded-lg
               text-sm font-medium whitespace-nowrap overflow-hidden
@@ -100,9 +103,8 @@ export default function Sidebar() {
 
         <div className="my-2.5 mx-1 h-px bg-gray-100" />
 
-        {/*Configuración y Salir — con label cuando está expandido */}
+        {/* Salir — con label cuando está expandido */}
         {[
-          { to: '/config', icon: Settings, label: 'Configuración' },
           { to: '/salir',  icon: LogOut,   label: 'Salir' },
         ].map(({ to, icon: Icon, label }) => (
           <NavLink

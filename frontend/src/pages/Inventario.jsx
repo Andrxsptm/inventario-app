@@ -1,4 +1,4 @@
-import { LayoutGrid, AlertTriangle, CheckCircle2, PackageSearch, ArrowUpRight } from 'lucide-react'
+import { LayoutGrid, AlertTriangle, CheckCircle2, PackageSearch, ArrowUpRight, Package } from 'lucide-react'
 
 const MOCK_INVENTARIO = [
   { id: 1, nombre: 'Café Premium Juan Valdez', stock: 24, min: 10, cat: 'Alimentos' },
@@ -9,11 +9,14 @@ const MOCK_INVENTARIO = [
 
 export default function Inventario() {
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center sm:items-end">
-        <div>
-          <h1 className="text-2xl font-black text-gray-800">Control de Existencias</h1>
-          <p className="text-sm text-gray-400">Estado logístico de tus productos en tiempo real</p>
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10 uppercase tracking-tighter">
+      <div className="flex justify-between items-center pt-2 lowercase">
+        <div className="uppercase tracking-tighter">
+          <h1 className="text-2xl font-black text-gray-800 flex items-center gap-3">
+             <Package className="text-blue-500" size={28} />
+             Gestión de Inventario
+          </h1>
+          <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">Estado logístico de tus productos en tiempo real</p>
         </div>
       </div>
 

@@ -1,4 +1,5 @@
 import { Users, UserPlus, Mail, Phone, MapPin, Search } from 'lucide-react'
+import Button from '../components/common/Button'
 
 const MOCK_CLIENTES = [
   { id: 1, nombre: 'Andrxs Ptm', correo: 'andrxs@email.com', telefono: '300 123 4567', total: 1250.50, initial: 'A' },
@@ -9,15 +10,20 @@ const MOCK_CLIENTES = [
 
 export default function Clientes() {
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10 uppercase tracking-tighter">
+      
+      {/* Header (Minimal Style) */}
+      <div className="flex justify-between items-center pt-2">
         <div>
-          <h1 className="text-2xl font-black text-gray-800">Cartera de Clientes</h1>
-          <p className="text-sm text-gray-400">Total: 4 Clientes registrados en el sistema</p>
+          <h1 className="text-2xl font-black text-gray-800 flex items-center gap-3">
+             <Users className="text-indigo-500" size={28} />
+             Cartera de Clientes
+          </h1>
+          <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">Directorio de clientes registrados en el sistema</p>
         </div>
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-indigo-200">
-          <UserPlus size={18} /> Registrar Cliente
-        </button>
+        <Button icon={UserPlus}>
+           Registrar Cliente
+        </Button>
       </div>
 
       <div className="flex items-center gap-3 bg-white px-4 py-2.5 rounded-2xl border border-gray-100 shadow-sm">

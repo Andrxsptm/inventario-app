@@ -1,4 +1,5 @@
 import { Plus, Search, Edit2, Trash2, Package, Filter } from 'lucide-react'
+import Button from '../components/common/Button'
 
 const MOCK_PRODUCTOS = [
   { id: 1, nombre: 'Café Premium Juan Valdez', proveedor: 'Distribuidora Global', precioC: 8.50, precioV: 14.90, stock: 24, min: 10 },
@@ -10,20 +11,20 @@ const MOCK_PRODUCTOS = [
 
 export default function Productos() {
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10 uppercase tracking-tighter">
+      
+      {/* Header (Minimal Style) */}
+      <div className="flex justify-between items-center pt-2">
         <div>
           <h1 className="text-2xl font-black text-gray-800 flex items-center gap-3">
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-              <Package size={24} />
-            </div>
-            Catálogo de Productos
+             <Package className="text-blue-500" size={28} />
+             Catálogo de Productos
           </h1>
-          <p className="text-sm text-gray-400 mt-1">Gestiona el inventario maestro de tu negocio</p>
+          <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">Gestiona el inventario maestro de tu negocio</p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-blue-200">
-          <Plus size={20} /> Nuevo Producto
-        </button>
+        <Button icon={Plus}>
+           Nuevo Producto
+        </Button>
       </div>
 
       <div className="card">
