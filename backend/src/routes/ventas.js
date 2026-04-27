@@ -36,7 +36,7 @@ router.post('/', authenticate, async (req, res) => {
       })
       if (clienteId) await tx.cliente.update({ where: { id: clienteId }, data: { totalCompras: { increment: total } } })
       return venta
-    })
+    }, { timeout: 30000 })
     res.status(201).json(venta)
   } catch (err) {
     res.status(400).json({ error: err.message })
@@ -53,7 +53,7 @@ router.put('/:id/anular', authenticate, requireAdmin, async (req, res) => {
       for (const item of venta.items)
         await tx.producto.update({ where: { id: item.productoId }, data: { stockActual: { increment: item.cantidad } } })
       await tx.venta.update({ where: { id }, data: { estado: 'ANULADA' } })
-    })
+    }, { timeout: 30000 })
     res.json({ ok: true })
   } catch (err) { res.status(400).json({ error: err.message }) }
 })

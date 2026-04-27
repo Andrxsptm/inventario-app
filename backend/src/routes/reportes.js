@@ -9,7 +9,7 @@ router.get('/dashboard', authenticate, async (_, res) => {
   const hoy = new Date(); hoy.setHours(0,0,0,0)
   const [ventasHoy, stockBajo, ultimasVentas, ultimosClientes, productosAgotarse] = await Promise.all([
     prisma.venta.aggregate({ where: { fecha: { gte: hoy }, estado: 'COMPLETADA' }, _sum: { total: true } }),
-    prisma.producto.count({ where: { activo: true, stockActual: { lte: prisma.producto.fields.stockMinimo } } }),
+    prisma.producto.findMany({ where: { activo: true } }).then(ps => ps.filter(p => p.stockActual <= p.stockMinimo).length),
     prisma.venta.findMany({ take: 5, orderBy: { fecha: 'desc' }, include: { items: { include: { producto: true } } } }),
     prisma.cliente.findMany({ take: 5, orderBy: { createdAt: 'desc' } }),
     prisma.producto.findMany({ where: { activo: true, stockActual: { lte: 10 } }, orderBy: { stockActual: 'asc' }, take: 10 }),

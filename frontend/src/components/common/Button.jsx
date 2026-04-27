@@ -24,8 +24,7 @@ export default function Button({
   type = "button",
   ...props 
 }) {
-  // Siempre usar amber para consistencia total según pedido del usuario
-  const variantClass = variants['amber']
+  const variantClass = variants[variant] || variants['amber']
 
   return (
     <button

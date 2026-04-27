@@ -1,234 +1,327 @@
-import { useState } from 'react'
-import { Truck, Mail, Phone, ExternalLink, Globe, X, MapPin, Notebook, Box } from 'lucide-react'
-import Button from '../components/common/Button'
+import { useEffect, useState } from 'react'
+import { Truck, Mail, Phone, Globe, X, MapPin, Notebook, Loader2, Pencil, Trash2, ToggleLeft, ToggleRight, CheckCircle2 } from 'lucide-react'
+import api from '../services/api'
 
-const MOCK_PROVEEDORES = [
-  { id: 1, nombre: 'Lácteos del Sur S.A.', correo: 'ventas@lacteossur.com', tel: '+57 322 100 0000', productos: 12 },
-  { id: 2, nombre: 'Distribuidora Global', correo: 'contacto@dglobal.com', tel: '+57 311 200 1122', productos: 45 },
-  { id: 3, nombre: 'Ingenio Azucarero Central', correo: 'info@ingazucar.com', tel: '+57 301 333 4455', productos: 5 },
-  { id: 4, nombre: 'Café de la Sierra', correo: 'pedidos@cafesierra.co', tel: '+57 315 444 5566', productos: 8 },
-  { id: 5, nombre: 'Frutas y Verduras Organix', correo: 'hola@organix.com', tel: '+57 318 777 8899', productos: 24 },
-  { id: 6, nombre: 'Carnes de Origen', correo: 'ventas@carnes.co', tel: '+57 300 999 0001', productos: 15 },
-]
+/* ─── Modal agregar/editar proveedor ─── */
+function ModalProveedor({ initial, onClose, onSaved }) {
+  const isEdit = !!initial?.id
+  const [form,   setForm]   = useState(initial ?? { nombre: '', telefono: '', correo: '', direccion: '', notas: '' })
+  const [saving, setSaving] = useState(false)
+  const [error,  setError]  = useState('')
+  const [success, setSuccess] = useState(false)
 
-const VISITAS_PROGRAMADAS = [
-  { id: 1, proveedor: 'Lácteos del Sur', fecha: '20 Abril', hora: '09:00 AM', status: 'confirmado' },
-  { id: 2, proveedor: 'Distribuidora Global', fecha: '22 Abril', hora: '14:30 PM', status: 'pendiente' },
-  { id: 3, proveedor: 'Café de la Sierra', fecha: '25 Abril', hora: '10:00 AM', status: 'confirmado' },
-  { id: 4, proveedor: 'Organix', fecha: '28 Abril', hora: '08:00 AM', status: 'pendiente' },
-]
+  async function handleSave() {
+    if (!form.nombre.trim()) { setError('El nombre es obligatorio.'); return }
+    setSaving(true); setError('')
+    try {
+      if (isEdit) {
+        await api.put(`/proveedores/${initial.id}`, form)
+      } else {
+        await api.post('/proveedores', form)
+      }
+      setSuccess(true)
+      setTimeout(() => { onSaved(); onClose() }, 1200)
+    } catch {
+      setError('Error al guardar el proveedor.')
+    } finally {
+      setSaving(false)
+    }
+  }
 
-function VisitCalendar() {
+  const inputCls = 'w-full bg-gray-50 border-2 border-gray-50 focus:border-amber-400 focus:bg-white rounded-2xl py-3 pl-11 pr-4 text-sm font-bold text-gray-700 outline-none transition-all'
+
   return (
-    <div className="card h-full flex flex-col space-y-4">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest">Próximas Visitas</h2>
-        <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center text-amber-500">
-           <Truck size={16} />
-        </div>
-      </div>
-      <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-        {VISITAS_PROGRAMADAS.map(v => (
-          <div key={v.id} className="relative pl-4 border-l-2 border-amber-200 py-1">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm font-bold text-gray-800">{v.proveedor}</p>
-                <p className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
-                  {v.fecha} • {v.hora}
-                </p>
-              </div>
-              <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${
-                v.status === 'confirmado' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'
-              }`}>
-                {v.status}
-              </span>
-            </div>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-modal-in">
+
+        <div className="p-5 bg-amber-50 border-b border-amber-100 flex justify-between items-center">
+          <div>
+            <h2 className="text-lg font-black text-gray-800 flex items-center gap-2">
+              <Truck className="text-amber-500" size={20} />
+              {isEdit ? 'Editar Proveedor' : 'Nuevo Proveedor'}
+            </h2>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
+              {isEdit ? 'Actualiza los datos del proveedor' : 'Registrar aliado comercial'}
+            </p>
           </div>
-        ))}
+          <button onClick={onClose} className="p-2 hover:bg-amber-100 text-amber-600 rounded-full transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+
+        {success ? (
+          <div className="flex flex-col items-center gap-3 py-12">
+            <div className="w-12 h-12 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center">
+              <CheckCircle2 size={24} />
+            </div>
+            <p className="text-xs font-black text-green-600 uppercase tracking-tighter">
+              {isEdit ? '¡Proveedor actualizado!' : '¡Proveedor creado!'}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="p-6 space-y-4">
+              {[
+                { label: 'Nombre de la Empresa *', key: 'nombre', icon: Globe, type: 'text', placeholder: 'Distribuidora Central S.A.' },
+                { label: 'Correo Electrónico',     key: 'correo', icon: Mail,  type: 'email', placeholder: 'ventas@ejemplo.com' },
+                { label: 'Teléfono',               key: 'telefono', icon: Phone, type: 'tel', placeholder: '+57...' },
+                { label: 'Dirección',              key: 'direccion', icon: MapPin, type: 'text', placeholder: 'Calle 123 #45-67' },
+                { label: 'Notas',                  key: 'notas', icon: Notebook, type: 'text', placeholder: 'Observaciones...' },
+              ].map(({ label, key, icon: Icon, type, placeholder }) => (
+                <div key={key} className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</label>
+                  <div className="relative group">
+                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-amber-500 transition-colors">
+                      <Icon size={16} />
+                    </div>
+                    <input
+                      type={type}
+                      placeholder={placeholder}
+                      value={form[key]}
+                      onChange={e => setForm({ ...form, [key]: e.target.value })}
+                      className={inputCls}
+                    />
+                  </div>
+                </div>
+              ))}
+
+              {error && (
+                <div className="bg-red-50 border border-red-100 text-red-600 text-[10px] font-bold uppercase tracking-wide px-3 py-2 rounded-xl">
+                  {error}
+                </div>
+              )}
+            </div>
+
+            <div className="p-5 bg-gray-50 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={onClose}
+                className="flex-1 py-2.5 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-gray-600 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex-[2] py-2.5 text-xs font-black uppercase tracking-widest text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-60 rounded-2xl flex items-center justify-center gap-2 transition-all"
+              >
+                {saving && <Loader2 size={13} className="animate-spin" />}
+                {saving ? 'Guardando...' : isEdit ? 'Actualizar' : 'Guardar Proveedor'}
+              </button>
+            </div>
+          </>
+        )}
       </div>
-      <Button variant="amber" className="w-full mt-auto border border-amber-100">
-        Gestionar Agenda Completa
-      </Button>
     </div>
   )
 }
 
+/* ─── Panel lateral activos ─── */
+function PanelActivos({ proveedores }) {
+  const activos = proveedores.filter(p => p.activo)
+  return (
+    <div className="card h-full flex flex-col space-y-4">
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest">Proveedores Activos</h2>
+        <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center text-amber-500">
+          <Truck size={16} />
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+        {activos.slice(0, 8).map(p => (
+          <div key={p.id} className="relative pl-4 border-l-2 border-amber-200 py-1">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-bold text-gray-800">{p.nombre}</p>
+                <p className="text-[10px] text-gray-400 font-medium">{p.correo ?? 'Sin correo'}</p>
+              </div>
+              <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-green-100 text-green-600 shrink-0">
+                activo
+              </span>
+            </div>
+          </div>
+        ))}
+        {activos.length === 0 && (
+          <p className="text-xs text-gray-300 font-bold text-center py-4">Sin proveedores activos</p>
+        )}
+      </div>
+      <p className="text-[9px] font-bold text-gray-300 uppercase tracking-widest text-center">
+        {activos.length} de {proveedores.length} activos
+      </p>
+    </div>
+  )
+}
+
+/* ─── Página principal ─── */
 export default function Proveedores() {
-  const [showModal, setShowModal] = useState(false)
+  const [proveedores, setProveedores] = useState([])
+  const [loading,     setLoading]     = useState(true)
+  const [error,       setError]       = useState(null)
+  const [modal,       setModal]       = useState(null)   // null | 'new' | {proveedor}
+  const [confirmDel,  setConfirmDel]  = useState(null)   // proveedor a eliminar
+
+  function load() {
+    setLoading(true)
+    api.get('/proveedores')
+      .then(r => setProveedores(r.data))
+      .catch(() => setError('No se pudieron cargar los proveedores'))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { load() }, [])
+
+  async function toggleActivo(p) {
+    try {
+      await api.put(`/proveedores/${p.id}/toggle-activo`)
+      load()
+    } catch { alert('Error al cambiar estado') }
+  }
+
+  async function eliminar(p) {
+    try {
+      await api.delete(`/proveedores/${p.id}`)
+      setConfirmDel(null)
+      load()
+    } catch { alert('Error al eliminar el proveedor') }
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 relative pb-10 uppercase tracking-tighter">
-      
-      {/* Modal - Agregar Proveedor */}
-      {showModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity">
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-modal-in">
-            {/* Modal Header */}
-            <div className="p-6 bg-amber-50 border-b border-amber-100 flex justify-between items-center">
-              <div>
-                <h2 className="text-xl font-black text-gray-800 flex items-center gap-2">
-                  <Truck className="text-amber-500" size={24} />
-                  Nuevo Proveedor
-                </h2>
-                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Registrar aliado comercial</p>
-              </div>
-              <button 
-                onClick={() => setShowModal(false)}
-                className="p-2 hover:bg-amber-100 text-amber-600 rounded-full transition-colors"
-              >
-                <X size={20} />
-              </button>
+
+      {/* Modal crear/editar */}
+      {modal && (
+        <ModalProveedor
+          initial={modal === 'new' ? null : modal}
+          onClose={() => setModal(null)}
+          onSaved={load}
+        />
+      )}
+
+      {/* Confirm delete */}
+      {confirmDel && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/25 backdrop-blur-sm" onClick={() => setConfirmDel(null)} />
+          <div className="relative bg-white rounded-2xl border border-gray-100 shadow-2xl w-full max-w-xs p-6 animate-in zoom-in-95 fade-in duration-200 text-center">
+            <div className="w-12 h-12 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <Trash2 size={20} />
             </div>
-
-            {/* Modal Body */}
-            <div className="p-8 space-y-5">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nombre de la Empresa</label>
-                <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-amber-500 transition-colors">
-                    <Globe size={18} />
-                  </div>
-                  <input 
-                    type="text" 
-                    placeholder="Ej. Distribuidora Central S.A."
-                    className="w-full bg-gray-50 border-2 border-gray-50 focus:border-amber-400 focus:bg-white rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Teléfono</label>
-                  <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-amber-500 transition-colors">
-                      <Phone size={18} />
-                    </div>
-                    <input 
-                      type="tel" 
-                      placeholder="+57..."
-                      className="w-full bg-gray-50 border-2 border-gray-50 focus:border-amber-400 focus:bg-white rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none transition-all"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Correo Electrónico</label>
-                  <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-amber-500 transition-colors">
-                      <Mail size={18} />
-                    </div>
-                    <input 
-                      type="email" 
-                      placeholder="ventas@ejemplo.com"
-                      className="w-full bg-gray-50 border-2 border-gray-50 focus:border-amber-400 focus:bg-white rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none transition-all"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Dirección Física</label>
-                <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-amber-500 transition-colors">
-                    <MapPin size={18} />
-                  </div>
-                  <input 
-                    type="text" 
-                    placeholder="Calle 123 #45-67, Ciudad"
-                    className="w-full bg-gray-50 border-2 border-gray-50 focus:border-amber-400 focus:bg-white rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Notas Adicionales</label>
-                <div className="relative group">
-                  <div className="absolute left-4 top-5 text-gray-300 group-focus-within:text-amber-500 transition-colors">
-                    <Notebook size={18} />
-                  </div>
-                  <textarea 
-                    rows="2"
-                    placeholder="Observaciones sobre entregas, pagos, etc."
-                    className="w-full bg-gray-50 border-2 border-gray-50 focus:border-amber-400 focus:bg-white rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none transition-all resize-none"
-                  ></textarea>
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-6 bg-gray-50 border-t border-gray-100 flex gap-3">
-              <button 
-                onClick={() => setShowModal(false)}
-                className="flex-1 py-3 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-gray-600 transition-colors"
-              >
+            <h3 className="text-sm font-black text-gray-800 uppercase tracking-tighter">¿Eliminar proveedor?</h3>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 mb-5">
+              {confirmDel.nombre} quedará inactivo
+            </p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmDel(null)} className="flex-1 py-2.5 text-[11px] font-black uppercase tracking-widest text-gray-500 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors">
                 Cancelar
               </button>
-              <Button 
-                variant="amber" 
-                className="flex-[2]"
-                onClick={() => {/* Lógica de guardado */}}
-              >
-                Guardar Proveedor
-              </Button>
+              <button onClick={() => eliminar(confirmDel)} className="flex-1 py-2.5 text-[11px] font-black uppercase tracking-widest text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all active:scale-[0.98]">
+                Eliminar
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Header (Minimal Style) */}
+      {/* Header */}
       <div className="flex justify-between items-center pt-2">
         <div>
           <h1 className="text-2xl font-black text-gray-800 flex items-center gap-3">
-             <Truck className="text-amber-500" size={28} />
-             Proveedores y Alianzas
+            <Truck className="text-amber-500" size={28} />
+            Proveedores y Alianzas
           </h1>
-          <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">Directorio de abastecimiento logístico</p>
+          <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">
+            Directorio de abastecimiento logístico
+          </p>
         </div>
-        <Button 
-          variant="amber" 
-          onClick={() => setShowModal(true)}
+        <button
+          onClick={() => setModal('new')}
+          className="flex items-center gap-2 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white bg-amber-500 hover:bg-amber-600 rounded-xl transition-all active:scale-[0.98] shadow-sm"
         >
-          + Nuevo Proveedor
-        </Button>
+          <Truck size={14} /> + Nuevo Proveedor
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch h-[calc(100vh-210px)] min-h-[500px]">
-        {/* Main List with Scroll */}
-        <div className="lg:col-span-3 overflow-y-auto pr-2 custom-scrollbar space-y-4">
-          {MOCK_PROVEEDORES.map(p => (
-            <div key={p.id} className="bg-white p-6 rounded-2xl border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:shadow-lg transition-all border-l-8 border-l-amber-400 shrink-0">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-gray-50 text-amber-500 rounded-2xl flex items-center justify-center border border-gray-100">
-                  <Globe size={28} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black text-gray-800">{p.nombre}</h3>
-                  <div className="flex flex-wrap gap-4 mt-2">
-                     <div className="flex items-center gap-2 text-xs text-gray-400">
-                        <Mail size={14} className="text-amber-400" /> {p.correo}
-                     </div>
-                     <div className="flex items-center gap-2 text-xs text-gray-400">
-                        <Phone size={14} className="text-amber-400" /> {p.tel}
-                     </div>
+      {error && (
+        <div className="bg-red-50 border border-red-100 text-red-600 text-xs font-bold px-4 py-3 rounded-xl">{error}</div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch" style={{ minHeight: 500 }}>
+
+        {/* Main list */}
+        <div className="lg:col-span-3 overflow-y-auto pr-2 custom-scrollbar space-y-4" style={{ maxHeight: 'calc(100vh - 220px)' }}>
+          {loading ? (
+            Array(4).fill(0).map((_, i) => (
+              <div key={i} className="animate-pulse bg-white h-24 rounded-2xl border border-gray-100" />
+            ))
+          ) : proveedores.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-gray-300 text-sm font-bold uppercase py-16">
+              No hay proveedores registrados
+            </div>
+          ) : (
+            proveedores.map(p => (
+              <div
+                key={p.id}
+                className={`bg-white p-5 rounded-2xl border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:shadow-lg transition-all border-l-8 shrink-0 ${
+                  p.activo ? 'border-l-amber-400' : 'border-l-gray-200 opacity-60'
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gray-50 text-amber-500 rounded-2xl flex items-center justify-center border border-gray-100 shrink-0">
+                    <Globe size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-gray-800">{p.nombre}</h3>
+                    <div className="flex flex-wrap gap-3 mt-1">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <Mail size={12} className="text-amber-400" /> {p.correo ?? '—'}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <Phone size={12} className="text-amber-400" /> {p.telefono ?? '—'}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-6 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-gray-50">
-                 <div className="text-center md:text-right flex-1 md:flex-none">
-                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Catálogo</p>
-                    <p className="text-xl font-black text-gray-700">{p.productos} SKU</p>
-                 </div>
-                 <button className="p-3 bg-gray-50 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-2xl transition-all">
-                    <ExternalLink size={20} />
-                 </button>
+                {/* Actions */}
+                <div className="flex items-center gap-2 w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-gray-50">
+                  {/* Estado badge */}
+                  <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-full ${
+                    p.activo ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+                  }`}>
+                    {p.activo ? 'Activo' : 'Inactivo'}
+                  </span>
+
+                  {/* Toggle activo */}
+                  <button
+                    onClick={() => toggleActivo(p)}
+                    title={p.activo ? 'Desactivar' : 'Activar'}
+                    className="p-2.5 rounded-xl text-gray-400 hover:bg-amber-50 hover:text-amber-600 transition-all"
+                  >
+                    {p.activo ? <ToggleRight size={18} className="text-amber-500" /> : <ToggleLeft size={18} />}
+                  </button>
+
+                  {/* Editar */}
+                  <button
+                    onClick={() => setModal(p)}
+                    className="p-2.5 rounded-xl text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-all"
+                  >
+                    <Pencil size={15} />
+                  </button>
+
+                  {/* Eliminar */}
+                  <button
+                    onClick={() => setConfirmDel(p)}
+                    className="p-2.5 rounded-xl text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
-        {/* Calendar Sidebar - Full Height */}
-        <div className="lg:col-span-1 h-full">
-          <VisitCalendar />
+        {/* Side panel */}
+        <div className="lg:col-span-1">
+          <PanelActivos proveedores={proveedores} />
         </div>
       </div>
     </div>

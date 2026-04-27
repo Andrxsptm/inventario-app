@@ -32,7 +32,7 @@ router.put('/:id/recibir', authenticate, requireAdmin, async (req, res) => {
       for (const item of orden.items)
         await tx.producto.update({ where: { id: item.productoId }, data: { stockActual: { increment: item.cantidad } } })
       await tx.ordenCompra.update({ where: { id }, data: { estado: 'RECIBIDA' } })
-    })
+    }, { timeout: 30000 })
     res.json({ ok: true })
   } catch (err) { res.status(400).json({ error: err.message }) }
 })

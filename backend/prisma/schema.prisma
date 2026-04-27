@@ -1,13 +1,11 @@
-// This is your Prisma schema file
-// Run: npx prisma migrate dev --name init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -15,94 +13,94 @@ model User {
   email     String   @unique
   password  String
   nombre    String
-  rol       String   @default("VENDEDOR") // ADMINISTRADOR | VENDEDOR
+  rol       String   @default("VENDEDOR")
   activo    Boolean  @default(true)
   createdAt DateTime @default(now())
   ventas    Venta[]
 }
 
 model Proveedor {
-  id        Int       @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
   nombre    String
   telefono  String?
   correo    String?
   direccion String?
   notas     String?
-  activo    Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  productos Producto[]
+  activo    Boolean       @default(true)
+  createdAt DateTime      @default(now())
   compras   OrdenCompra[]
+  productos Producto[]
 }
 
 model Producto {
-  id           Int       @id @default(autoincrement())
+  id           Int               @id @default(autoincrement())
   nombre       String
   precioCompra Float
   precioVenta  Float
-  stockActual  Int       @default(0)
-  stockMinimo  Int       @default(5)
-  activo       Boolean   @default(true)
-  createdAt    DateTime  @default(now())
+  stockActual  Int               @default(0)
+  stockMinimo  Int               @default(5)
+  activo       Boolean           @default(true)
+  createdAt    DateTime          @default(now())
   proveedorId  Int
-  proveedor    Proveedor @relation(fields: [proveedorId], references: [id])
-  itemsVenta   ItemVenta[]
   itemsCompra  ItemOrdenCompra[]
+  itemsVenta   ItemVenta[]
+  proveedor    Proveedor         @relation(fields: [proveedorId], references: [id])
 }
 
 model Cliente {
-  id             Int      @id @default(autoincrement())
-  nombre         String
-  telefono       String?
-  correo         String?
-  direccion      String?
-  totalCompras   Float    @default(0)
-  activo         Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  ventas         Venta[]
+  id           Int      @id @default(autoincrement())
+  nombre       String
+  telefono     String?
+  correo       String?
+  direccion    String?
+  totalCompras Float    @default(0)
+  activo       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  ventas       Venta[]
 }
 
 model Venta {
-  id          Int         @id @default(autoincrement())
-  fecha       DateTime    @default(now())
-  total       Float
-  estado      String      @default("COMPLETADA") // COMPLETADA | ANULADA
-  notas       String?
-  usuarioId   Int
-  usuario     User        @relation(fields: [usuarioId], references: [id])
-  clienteId   Int?
-  cliente     Cliente?    @relation(fields: [clienteId], references: [id])
-  items       ItemVenta[]
+  id        Int         @id @default(autoincrement())
+  fecha     DateTime    @default(now())
+  total     Float
+  estado    String      @default("COMPLETADA")
+  notas     String?
+  usuarioId Int
+  clienteId Int?
+  items     ItemVenta[]
+  cliente   Cliente?    @relation(fields: [clienteId], references: [id])
+  usuario   User        @relation(fields: [usuarioId], references: [id])
 }
 
 model ItemVenta {
-  id          Int      @id @default(autoincrement())
-  cantidad    Int
-  precioUnit  Float
-  subtotal    Float
-  ventaId     Int
-  venta       Venta    @relation(fields: [ventaId], references: [id])
-  productoId  Int
-  producto    Producto @relation(fields: [productoId], references: [id])
+  id         Int      @id @default(autoincrement())
+  cantidad   Int
+  precioUnit Float
+  subtotal   Float
+  ventaId    Int
+  productoId Int
+  producto   Producto @relation(fields: [productoId], references: [id])
+  venta      Venta    @relation(fields: [ventaId], references: [id])
 }
 
 model OrdenCompra {
   id          Int               @id @default(autoincrement())
   fecha       DateTime          @default(now())
-  estado      String            @default("PENDIENTE") // PENDIENTE | RECIBIDA | CANCELADA
+  estado      String            @default("PENDIENTE")
   total       Float             @default(0)
   notas       String?
   proveedorId Int
-  proveedor   Proveedor         @relation(fields: [proveedorId], references: [id])
   items       ItemOrdenCompra[]
+  proveedor   Proveedor         @relation(fields: [proveedorId], references: [id])
 }
 
 model ItemOrdenCompra {
-  id          Int         @id @default(autoincrement())
-  cantidad    Int
-  precioUnit  Float
-  subtotal    Float
-  ordenId     Int
-  orden       OrdenCompra @relation(fields: [ordenId], references: [id])
-  productoId  Int
-  producto    Producto    @relation(fields: [productoId], references: [id])
+  id         Int         @id @default(autoincrement())
+  cantidad   Int
+  precioUnit Float
+  subtotal   Float
+  ordenId    Int
+  productoId Int
+  orden      OrdenCompra @relation(fields: [ordenId], references: [id])
+  producto   Producto    @relation(fields: [productoId], references: [id])
 }

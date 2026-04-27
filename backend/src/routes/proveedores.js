@@ -5,7 +5,7 @@ const router = Router()
 const prisma = new PrismaClient()
 
 router.get('/', authenticate, async (_, res) => {
-  const data = await prisma.proveedor.findMany({ where: { activo: true }, orderBy: { nombre: 'asc' } })
+  const data = await prisma.proveedor.findMany({ orderBy: { nombre: 'asc' } })
   res.json(data)
 })
 router.post('/', authenticate, requireAdmin, async (req, res) => {
@@ -16,6 +16,12 @@ router.post('/', authenticate, requireAdmin, async (req, res) => {
 router.put('/:id', authenticate, requireAdmin, async (req, res) => {
   const { nombre, telefono, correo, direccion, notas } = req.body
   const data = await prisma.proveedor.update({ where: { id: parseInt(req.params.id) }, data: { nombre, telefono, correo, direccion, notas } })
+  res.json(data)
+})
+router.put('/:id/toggle-activo', authenticate, requireAdmin, async (req, res) => {
+  const id = parseInt(req.params.id)
+  const p = await prisma.proveedor.findUnique({ where: { id } })
+  const data = await prisma.proveedor.update({ where: { id }, data: { activo: !p.activo } })
   res.json(data)
 })
 router.delete('/:id', authenticate, requireAdmin, async (req, res) => {

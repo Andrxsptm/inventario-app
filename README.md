@@ -1,22 +1,21 @@
 # 📦 InvenSmart — Sistema de Gestión de Inventario
 
-
 ---
 
 ## 🛠️ Tegnologias Stack
 
-| Capa       | Tecnología                              |
-|------------|------------------------------------------|
-| Frontend   | React 18 + Vite + Tailwind CSS           |
-| Gráficas   | Recharts                                 |
-| Routing    | React Router DOM v6                      |
-| Estado     | Zustand (auth persistente)               |
-| HTTP       | Axios (con interceptor JWT)              |
-| Backend    | Node.js + Express                        |
-| ORM        | Prisma                                   |
-| Base Datos | SQLite (dev) → PostgreSQL (prod)         |
-| Auth       | JWT + bcrypt                             |
-| Validación | Zod                                      |
+| Capa       | Tecnología                       |
+| ---------- | -------------------------------- |
+| Frontend   | React 18 + Vite + Tailwind CSS   |
+| Gráficas   | Recharts                         |
+| Routing    | React Router DOM v6              |
+| Estado     | Zustand (auth persistente)       |
+| HTTP       | Axios (con interceptor JWT)      |
+| Backend    | Node.js + Express                |
+| ORM        | Prisma                           |
+| Base Datos | SQLite (dev) → PostgreSQL (prod) |
+| Auth       | JWT + bcrypt                     |
+| Validación | Zod                              |
 
 ---
 
@@ -71,17 +70,16 @@ npm run dev                   # http://localhost:3000
 
 ## 👤 Usuarios de prueba (seed)
 
-| Rol           | Email                      | Contraseña    |
-|---------------|----------------------------|---------------|
-| Administrador | admin                      | admin123      |
-| Vendedor      | vendedor                   | vendedor123   |
+| Rol           | Email    | Contraseña  |
+| ------------- | -------- | ----------- |
+| Administrador | admin    | admin123    |
+| Vendedor      | vendedor | vendedor123 |
 
 ---
 
 ## 📋 Módulos implementados
 
-Ninguno xd
----
+## Ninguno xd
 
 ## 🔌 API Endpoints principales
 
