@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Truck, Mail, Phone, Globe, X, MapPin, Notebook, Loader2, Pencil, Trash2, ToggleLeft, ToggleRight, CheckCircle2 } from 'lucide-react'
+import { Truck, Mail, Phone, Globe, X, MapPin, Notebook, Loader2, Pencil, Trash2, ToggleLeft, ToggleRight, CheckCircle2, Plus } from 'lucide-react'
 import api from '../services/api'
+import Button from '../components/common/Button'
 
 /* ─── Modal agregar/editar proveedor ─── */
 function ModalProveedor({ initial, onClose, onSaved }) {
@@ -231,12 +232,9 @@ export default function Proveedores() {
             Directorio de abastecimiento logístico
           </p>
         </div>
-        <button
-          onClick={() => setModal('new')}
-          className="flex items-center gap-2 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-white bg-amber-500 hover:bg-amber-600 rounded-xl transition-all active:scale-[0.98] shadow-sm"
-        >
-          <Truck size={14} /> + Nuevo Proveedor
-        </button>
+        <Button onClick={() => setModal('new')} icon={Plus}>
+          Nuevo Proveedor
+        </Button>
       </div>
 
       {error && (

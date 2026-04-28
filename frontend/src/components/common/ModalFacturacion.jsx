@@ -1,55 +1,177 @@
 import { useState, useEffect, useRef } from 'react'
-import { X, FileText, User, Search, Plus, Trash2, Loader2, CheckCircle2, ChevronDown } from 'lucide-react'
+import { X, FileText, Search, Plus, Trash2, Loader2, CheckCircle2, Package, Hash, Tag, AlertCircle, User } from 'lucide-react'
 import api from '../../services/api'
 import { useAuthStore } from '../../store/authStore'
 
-const EMPTY_FORM = { nombre: '', telefono: '', correo: '', direccion: '' }
+/* ─────────────────────────────────────────── */
+/* Buscador de Producto                       */
+/* ─────────────────────────────────────────── */
+function ProductoSearch({ onAdd, itemsActuales, productos }) {
+  const [query, setQuery]     = useState('')
+  const [open, setOpen]       = useState(false)
+  const ref = useRef(null)
 
+  // cerrar al click fuera
+  useEffect(() => {
+    function handler(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const idsEnUso = itemsActuales.map(i => i.producto.id)
+  const results = query.trim()
+    ? productos.filter(p =>
+        !idsEnUso.includes(p.id) &&
+        (p.nombre.toLowerCase().includes(query.toLowerCase()) || String(p.id).includes(query))
+      ).slice(0, 7)
+    : []
+
+  function select(p) { onAdd(p); setQuery(''); setOpen(false) }
+
+  return (
+    <div ref={ref} className="relative">
+      <div className="relative group">
+        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-amber-500 transition-colors">
+          <Search size={16} />
+        </div>
+        <input
+          type="text"
+          placeholder="Escribe el nombre o ID del producto..."
+          value={query}
+          onChange={e => { setQuery(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          className="w-full bg-gray-50 border-2 border-gray-50 focus:border-amber-400 focus:bg-white rounded-2xl py-3 pl-11 pr-4 text-sm font-bold text-gray-700 outline-none transition-all"
+        />
+        {query && (
+          <button
+            type="button"
+            onMouseDown={() => { setQuery(''); setOpen(false) }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
+          >
+            <X size={14} />
+          </button>
+        )}
+      </div>
+
+      {open && query.trim() && (
+        <div className="absolute top-full mt-1 w-full bg-white rounded-2xl border border-gray-100 shadow-xl z-50 overflow-hidden">
+          {results.length === 0 ? (
+            <div className="px-4 py-3 text-xs text-gray-400 font-bold uppercase tracking-widest">
+              Sin resultados para "{query}"
+            </div>
+          ) : (
+            results.map(p => (
+              <button
+                key={p.id}
+                type="button"
+                onMouseDown={() => select(p)}
+                disabled={p.stockActual === 0}
+                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-amber-50 transition-colors text-left disabled:opacity-40 disabled:cursor-not-allowed group"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                    <Package size={13} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-gray-800 group-hover:text-amber-700">{p.nombre}</p>
+                    <p className="text-[10px] text-gray-400 font-bold">
+                      ID: {p.id} · Stock: {p.stockActual}{p.stockActual === 0 ? ' (Agotado)' : ''}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs font-black text-green-600 shrink-0">${p.precioVenta?.toFixed(2)}</span>
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────── */
+/* Modal Principal                            */
+/* ─────────────────────────────────────────── */
 export default function ModalFacturacion({ onClose }) {
   const { user } = useAuthStore()
 
-  /* clientes */
-  const [clientes,       setClientes]       = useState([])
-  const [clienteQuery,   setClienteQuery]   = useState('')
-  const [clienteSel,     setClienteSel]     = useState(null)   // objeto cliente existente
-  const [nuevoCliente,   setNuevoCliente]   = useState(EMPTY_FORM)
-  const [showSuggestions,setShowSuggestions]= useState(false)
-  const [modoNuevo,      setModoNuevo]      = useState(false)
+  /* ── Clientes ── */
+  const [clientes,        setClientes]        = useState([])
+  const [idQuery,         setIdQuery]         = useState('')
+  const [suggestions,     setSuggestions]     = useState([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [clienteSel,      setClienteSel]      = useState(null)
+  const [modoNuevo,       setModoNuevo]       = useState(false)
+  const [nuevoCliente,    setNuevoCliente]    = useState({ identificacion: '', nombre: '', telefono: '', correo: '' })
+  const clienteRef = useRef(null)
 
-  /* productos */
-  const [productos,  setProductos]  = useState([])
-  const [items,      setItems]      = useState([])            // [{producto, cantidad}]
+  /* ── Productos e items ── */
+  const [productos, setProductos] = useState([])
+  const [items,     setItems]     = useState([])
 
-  /* ui */
-  const [notas,    setNotas]    = useState('')
-  const [saving,   setSaving]   = useState(false)
-  const [success,  setSuccess]  = useState(false)
-  const [error,    setError]    = useState('')
-  const searchRef = useRef(null)
+  /* ── UI ── */
+  const [notas,   setNotas]   = useState('')
+  const [saving,  setSaving]  = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [error,   setError]   = useState('')
 
   useEffect(() => {
     api.get('/clientes').then(r => setClientes(r.data)).catch(() => {})
     api.get('/productos').then(r => setProductos(r.data)).catch(() => {})
   }, [])
 
-  /* ── Cliente autocomplete ── */
-  const suggestions = clientes.filter(c =>
-    c.nombre.toLowerCase().includes(clienteQuery.toLowerCase()) ||
-    (c.correo ?? '').toLowerCase().includes(clienteQuery.toLowerCase())
-  ).slice(0, 6)
+  /* cerrar dropdown cliente al click fuera */
+  useEffect(() => {
+    function handler(e) { if (clienteRef.current && !clienteRef.current.contains(e.target)) setShowSuggestions(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  /* ── Filtrar clientes mientras se escribe ── */
+  function handleIdChange(val) {
+    setIdQuery(val)
+    setClienteSel(null)
+    setModoNuevo(false)
+
+    if (!val.trim()) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+
+    const q = val.toLowerCase().trim()
+    const found = clientes.filter(c =>
+      String(c.id).startsWith(q) ||
+      (c.identificacion ?? '').toLowerCase().includes(q) ||
+      c.nombre.toLowerCase().includes(q) ||
+      (c.telefono ?? '').includes(q)
+    ).slice(0, 6)
+
+    setSuggestions(found)
+    setShowSuggestions(true)
+  }
 
   function seleccionarCliente(c) {
     setClienteSel(c)
-    setClienteQuery(c.nombre)
+    setIdQuery(c.identificacion ? c.identificacion : String(c.id))
+    setSuggestions([])
     setShowSuggestions(false)
     setModoNuevo(false)
   }
 
   function activarNuevoCliente() {
-    setClienteSel(null)
     setModoNuevo(true)
     setShowSuggestions(false)
-    setNuevoCliente({ ...EMPTY_FORM, nombre: clienteQuery })
+    // pre-llenar identificacion con lo que el usuario buscó
+    setNuevoCliente({ identificacion: idQuery.trim(), nombre: '', telefono: '', correo: '' })
+  }
+
+  function limpiarCliente() {
+    setClienteSel(null)
+    setModoNuevo(false)
+    setIdQuery('')
+    setSuggestions([])
+    setNuevoCliente({ identificacion: '', nombre: '', telefono: '', correo: '' })
   }
 
   /* ── Items ── */
@@ -77,12 +199,15 @@ export default function ModalFacturacion({ onClose }) {
   async function handleSubmit(e) {
     e.preventDefault()
     if (items.length === 0) { setError('Agrega al menos un producto.'); return }
+    for (const it of items) {
+      if (it.cantidad > it.producto.stockActual) {
+        setError(`Stock insuficiente para "${it.producto.nombre}".`); return
+      }
+    }
     setSaving(true); setError('')
-
     try {
       let clienteId = clienteSel?.id ?? null
 
-      /* Si es nuevo cliente, crearlo primero */
       if (modoNuevo) {
         if (!nuevoCliente.nombre.trim()) { setError('El nombre del cliente es obligatorio.'); setSaving(false); return }
         const { data: nc } = await api.post('/clientes', nuevoCliente)
@@ -108,177 +233,254 @@ export default function ModalFacturacion({ onClose }) {
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
+  const inputCls = 'w-full bg-gray-50 border-2 border-gray-50 focus:border-amber-400 focus:bg-white rounded-2xl py-3 pl-11 pr-4 text-sm font-bold text-gray-700 outline-none transition-all'
+  const iconCls  = 'absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-amber-500 transition-colors'
 
-      <div className="relative bg-white rounded-2xl border border-gray-100 shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col animate-in zoom-in-95 fade-in duration-200">
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-modal-in flex flex-col max-h-[90vh]">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+        <div className="p-5 bg-amber-50 border-b border-amber-100 flex justify-between items-center shrink-0">
           <div>
-            <h2 className="text-sm font-black text-gray-800 uppercase tracking-tighter flex items-center gap-2">
-              <FileText size={15} className="text-violet-500" /> Nueva Factura / Venta
+            <h2 className="text-lg font-black text-gray-800 flex items-center gap-2">
+              <FileText className="text-amber-500" size={20} />
+              Nueva Factura
             </h2>
             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
-              Vendedor: {user?.nombre ?? '—'}
+              Registrar venta al cliente
             </p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors">
-            <X size={16} />
+          <button onClick={onClose} className="p-2 hover:bg-amber-100 text-amber-600 rounded-full transition-colors">
+            <X size={18} />
           </button>
         </div>
 
         {success ? (
-          <div className="flex flex-col items-center gap-3 py-16">
-            <div className="w-14 h-14 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center">
-              <CheckCircle2 size={28} />
+          <div className="flex flex-col items-center gap-3 py-12">
+            <div className="w-12 h-12 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center">
+              <CheckCircle2 size={24} />
             </div>
-            <p className="text-sm font-black text-green-600 uppercase tracking-tighter">¡Venta registrada exitosamente!</p>
+            <p className="text-xs font-black text-green-600 uppercase tracking-tighter">¡Venta registrada exitosamente!</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
             <div className="overflow-y-auto custom-scrollbar flex-1 p-6 space-y-5">
 
-              {/* ── Cliente ── */}
-              <div>
-                <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">
-                  Cliente
+              {/* ── CLIENTE ── */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  Cliente (opcional)
                 </label>
 
-                {/* Search input */}
-                <div className="relative" ref={searchRef}>
-                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5">
-                    <Search size={14} className="text-gray-400 shrink-0" />
-                    <input
-                      type="text"
-                      value={clienteQuery}
-                      onChange={e => { setClienteQuery(e.target.value); setShowSuggestions(true); setClienteSel(null); setModoNuevo(false) }}
-                      onFocus={() => setShowSuggestions(true)}
-                      placeholder="Buscar cliente existente..."
-                      className="bg-transparent outline-none text-sm font-medium text-gray-800 w-full placeholder-gray-300"
-                    />
-                    {clienteSel && <span className="text-[9px] font-black text-green-600 bg-green-50 px-2 py-0.5 rounded-full uppercase tracking-widest shrink-0">Existente</span>}
-                  </div>
-
-                  {/* Suggestions dropdown */}
-                  {showSuggestions && clienteQuery.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-gray-100 shadow-xl z-10 overflow-hidden">
-                      {suggestions.map(c => (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => seleccionarCliente(c)}
-                          className="w-full text-left px-4 py-2.5 hover:bg-violet-50 transition-colors flex items-center justify-between group"
-                        >
-                          <div>
-                            <p className="text-xs font-bold text-gray-800 group-hover:text-violet-700">{c.nombre}</p>
-                            <p className="text-[10px] text-gray-400">{c.correo ?? c.telefono ?? '—'}</p>
-                          </div>
-                          <ChevronDown size={12} className="-rotate-90 text-gray-300 group-hover:text-violet-400" />
-                        </button>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={activarNuevoCliente}
-                        className="w-full text-left px-4 py-2.5 hover:bg-violet-50 transition-colors flex items-center gap-2 border-t border-gray-50"
-                      >
-                        <Plus size={14} className="text-violet-500" />
-                        <span className="text-xs font-black text-violet-600">Crear nuevo cliente "{clienteQuery}"</span>
-                      </button>
+                {/* Tarjeta de cliente seleccionado */}
+                {clienteSel ? (
+                  <div className="flex items-center gap-3 bg-amber-50 border-2 border-amber-200 rounded-2xl px-4 py-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-black shrink-0">
+                      {clienteSel.nombre.charAt(0).toUpperCase()}
                     </div>
-                  )}
-                </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-black text-gray-800 truncate">{clienteSel.nombre}</p>
+                      <p className="text-[10px] text-gray-400 font-bold">
+                        {clienteSel.identificacion
+                          ? `ID: ${clienteSel.identificacion}`
+                          : `Nº: ${clienteSel.id}`}
+                        {clienteSel.telefono ? ` · ${clienteSel.telefono}` : ''}
+                      </p>
+                    </div>
+                    <button type="button" onClick={limpiarCliente} className="p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors">
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  /* Autocomplete */
+                  <div ref={clienteRef} className="relative">
+                    <div className="relative group">
+                      <div className={iconCls}><Hash size={16} /></div>
+                      <input
+                        type="text"
+                        value={idQuery}
+                        onChange={e => handleIdChange(e.target.value)}
+                        onFocus={() => idQuery && setShowSuggestions(true)}
+                        placeholder="Escribe la identificación o nombre del cliente..."
+                        className={inputCls}
+                      />
+                    </div>
 
-                {/* Nuevo cliente form inline */}
-                {modoNuevo && (
-                  <div className="mt-3 p-4 bg-violet-50/50 border border-violet-100 rounded-xl space-y-3">
-                    <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest">Nuevo cliente</p>
-                    {[
-                      { key: 'nombre', label: 'Nombre *', placeholder: 'Nombre completo' },
-                      { key: 'telefono', label: 'Teléfono', placeholder: '+57...' },
-                      { key: 'correo', label: 'Correo', placeholder: 'correo@ejemplo.com' },
-                      { key: 'direccion', label: 'Dirección', placeholder: 'Calle...' },
-                    ].map(({ key, label, placeholder }) => (
-                      <div key={key}>
-                        <label className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-0.5">{label}</label>
+                    {showSuggestions && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl border border-gray-100 shadow-xl z-50 overflow-hidden">
+                        {suggestions.map(c => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onMouseDown={() => seleccionarCliente(c)}
+                            className="w-full text-left px-4 py-2.5 hover:bg-amber-50 transition-colors flex items-center gap-3 group"
+                          >
+                            <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-[10px] font-black shrink-0">
+                              {c.nombre.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-gray-800 group-hover:text-amber-700">{c.nombre}</p>
+                              <p className="text-[10px] text-gray-400 font-bold">
+                                {c.identificacion ? `ID: ${c.identificacion}` : `Nº: ${c.id}`}
+                                {c.telefono ? ` · ${c.telefono}` : ''}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onMouseDown={activarNuevoCliente}
+                          className="w-full text-left px-4 py-2.5 hover:bg-amber-50 transition-colors flex items-center gap-2 border-t border-gray-50"
+                        >
+                          <Plus size={13} className="text-amber-500" />
+                          <span className="text-xs font-black text-amber-600">
+                            {suggestions.length === 0 ? 'No encontrado — crear nuevo cliente' : 'Crear nuevo cliente'}
+                          </span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Formulario nuevo cliente */}
+                {modoNuevo && !clienteSel && (
+                  <div className="mt-2 p-4 bg-amber-50/60 border-2 border-amber-100 rounded-2xl space-y-3">
+                    <div className="flex justify-between items-center">
+                      <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest flex items-center gap-1.5">
+                        <User size={12} /> Nuevo Cliente
+                      </p>
+                      <button type="button" onClick={limpiarCliente} className="p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors"><X size={12} /></button>
+                    </div>
+
+                    {/* Identificación — pre-llenada con el query, editable */}
+                    <div>
+                      <label className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-0.5">
+                        Identificación (cédula / NIT)
+                      </label>
+                      <div className="relative group">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-amber-500 transition-colors">
+                          <Hash size={13} />
+                        </div>
                         <input
                           type="text"
-                          value={nuevoCliente[key]}
-                          onChange={e => setNuevoCliente(prev => ({ ...prev, [key]: e.target.value }))}
-                          placeholder={placeholder}
-                          className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
+                          value={nuevoCliente.identificacion}
+                          onChange={e => setNuevoCliente(prev => ({ ...prev, identificacion: e.target.value }))}
+                          placeholder="Ej. 1234567890"
+                          className="w-full bg-white border-2 border-gray-100 rounded-xl py-2 pl-9 pr-3 text-sm font-bold text-gray-700 placeholder-gray-300 focus:outline-none focus:border-amber-400 transition-all"
                         />
                       </div>
-                    ))}
+                    </div>
+
+                    {/* Nombre */}
+                    <div>
+                      <label className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-0.5">Nombre *</label>
+                      <input
+                        type="text"
+                        value={nuevoCliente.nombre}
+                        onChange={e => setNuevoCliente(prev => ({ ...prev, nombre: e.target.value }))}
+                        placeholder="Nombre completo"
+                        className="w-full bg-white border-2 border-gray-100 rounded-xl py-2 px-3 text-sm font-bold text-gray-700 placeholder-gray-300 focus:outline-none focus:border-amber-400 transition-all"
+                      />
+                    </div>
+
+                    {/* Teléfono + Correo en fila */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-0.5">Teléfono</label>
+                        <input
+                          type="text"
+                          value={nuevoCliente.telefono}
+                          onChange={e => setNuevoCliente(prev => ({ ...prev, telefono: e.target.value }))}
+                          placeholder="+57..."
+                          className="w-full bg-white border-2 border-gray-100 rounded-xl py-2 px-3 text-sm font-bold text-gray-700 placeholder-gray-300 focus:outline-none focus:border-amber-400 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-black text-gray-500 uppercase tracking-widest mb-0.5">Correo</label>
+                        <input
+                          type="email"
+                          value={nuevoCliente.correo}
+                          onChange={e => setNuevoCliente(prev => ({ ...prev, correo: e.target.value }))}
+                          placeholder="correo@..."
+                          className="w-full bg-white border-2 border-gray-100 rounded-xl py-2 px-3 text-sm font-bold text-gray-700 placeholder-gray-300 focus:outline-none focus:border-amber-400 transition-all"
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* ── Productos ── */}
-              <div>
-                <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">
-                  Productos
+              <div className="border-t border-gray-50" />
+
+              {/* ── PRODUCTOS ── */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  Agregar Producto
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">
-                  {productos.map(p => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => addItem(p)}
-                      disabled={p.stockActual === 0}
-                      className="text-left p-2.5 bg-gray-50 hover:bg-violet-50 border border-gray-100 hover:border-violet-200 rounded-xl transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      <p className="text-[11px] font-black text-gray-800 group-hover:text-violet-700 line-clamp-1">{p.nombre}</p>
-                      <p className="text-[10px] text-gray-400 mt-0.5">${p.precioVenta.toFixed(2)} · {p.stockActual} uds</p>
-                    </button>
-                  ))}
-                </div>
+                <ProductoSearch onAdd={addItem} itemsActuales={items} productos={productos} />
               </div>
 
-              {/* ── Items seleccionados ── */}
+              {/* ── LISTA DE ITEMS ── */}
               {items.length > 0 && (
-                <div>
-                  <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">
-                    Orden ({items.length} ítems)
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    Productos en la factura
                   </label>
                   <div className="space-y-2">
                     {items.map(i => (
-                      <div key={i.producto.id} className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2.5">
+                      <div key={i.producto.id} className="flex items-center gap-3 bg-gray-50 rounded-2xl px-3 py-3">
+                        <div className="w-8 h-8 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center shrink-0">
+                          <Package size={14} />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-[11px] font-black text-gray-800 truncate">{i.producto.nombre}</p>
-                          <p className="text-[10px] text-gray-400">${i.producto.precioVenta.toFixed(2)} c/u</p>
+                          <p className="text-[10px] text-gray-400 font-bold">Stock disponible: {i.producto.stockActual}</p>
                         </div>
-                        <input
-                          type="number"
-                          min={1}
-                          max={i.producto.stockActual}
-                          value={i.cantidad}
-                          onChange={e => updateCantidad(i.producto.id, e.target.value)}
-                          className="w-14 text-center text-sm font-black text-gray-800 bg-white border border-gray-200 rounded-lg py-1 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
-                        />
-                        <p className="text-xs font-black text-gray-700 w-16 text-right">
+                        <div className="flex items-center gap-1">
+                          <label className="text-[9px] text-gray-400 font-black uppercase">Cant.</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={i.producto.stockActual}
+                            value={i.cantidad}
+                            onChange={e => updateCantidad(i.producto.id, e.target.value)}
+                            className="w-14 text-center text-xs font-black text-gray-800 bg-white border-2 border-gray-100 rounded-xl py-1 focus:outline-none focus:border-amber-400 transition-all"
+                          />
+                        </div>
+                        <p className="text-xs font-black text-green-600 w-16 text-right shrink-0">
                           ${(i.producto.precioVenta * i.cantidad).toFixed(2)}
                         </p>
-                        <button type="button" onClick={() => removeItem(i.producto.id)} className="text-gray-300 hover:text-red-500 transition-colors">
-                          <Trash2 size={14} />
+                        <button type="button" onClick={() => removeItem(i.producto.id)} className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
+                          <Trash2 size={13} />
                         </button>
                       </div>
                     ))}
                   </div>
+                  <div className="flex justify-end pt-1">
+                    <div className="bg-amber-50 border border-amber-100 rounded-2xl px-5 py-3 text-right">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</p>
+                      <p className="text-xl font-black text-amber-600">${total.toFixed(2)}</p>
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {/* ── Notas ── */}
-              <div>
-                <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Notas (opcional)</label>
-                <textarea
-                  rows={2}
-                  value={notas}
-                  onChange={e => setNotas(e.target.value)}
-                  placeholder="Observaciones..."
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all resize-none"
-                />
+              {/* ── NOTAS ── */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Notas (opcional)</label>
+                <div className="relative group">
+                  <div className="absolute left-3.5 top-3.5 text-gray-300 group-focus-within:text-amber-500 transition-colors">
+                    <Tag size={16} />
+                  </div>
+                  <textarea
+                    rows={2}
+                    placeholder="Observaciones..."
+                    value={notas}
+                    onChange={e => setNotas(e.target.value)}
+                    className="w-full bg-gray-50 border-2 border-gray-50 focus:border-amber-400 focus:bg-white rounded-2xl py-3 pl-11 pr-4 text-sm font-bold text-gray-700 outline-none transition-all resize-none"
+                  />
+                </div>
               </div>
 
               {error && (
@@ -289,29 +491,22 @@ export default function ModalFacturacion({ onClose }) {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-4 shrink-0 bg-gray-50/50">
-              <div>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Total</p>
-                <p className="text-xl font-black text-gray-900">${total.toLocaleString('es', { minimumFractionDigits: 2 })}</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={saving}
-                  className="px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-gray-500 bg-white border border-gray-200 hover:bg-gray-100 rounded-xl transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving || items.length === 0}
-                  className="px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-white bg-violet-600 hover:bg-violet-700 disabled:opacity-50 rounded-xl flex items-center gap-1.5 transition-all active:scale-[0.98]"
-                >
-                  {saving ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} />}
-                  {saving ? 'Guardando...' : 'Registrar Venta'}
-                </button>
-              </div>
+            <div className="p-5 bg-gray-50 border-t border-gray-100 flex gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-2.5 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-gray-600 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={saving || items.length === 0}
+                className="flex-[2] py-2.5 text-xs font-black uppercase tracking-widest text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-60 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+              >
+                {saving && <Loader2 size={13} className="animate-spin" />}
+                {saving ? 'Procesando...' : `Facturar $${total.toFixed(2)}`}
+              </button>
             </div>
           </form>
         )}

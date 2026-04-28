@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   Plus, Search, Trash2, Package, Filter, Loader2, X,
-  CheckCircle2, Tag, Truck, DollarSign, Layers, AlertCircle
+  CheckCircle2, Tag, Truck, DollarSign, Layers, AlertCircle, ChevronDown
 } from 'lucide-react'
 import Button from '../components/common/Button'
 import api from '../services/api'
@@ -132,11 +132,14 @@ function ModalProducto({ initial, onClose, onSaved }) {
                   <select
                     value={form.proveedorId}
                     onChange={e => setForm({ ...form, proveedorId: e.target.value })}
-                    className={inputCls}
+                    className={`${inputCls} appearance-none cursor-pointer pr-10`}
                   >
                     <option value="">— Selecciona un proveedor —</option>
                     {proveedores.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                   </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300 group-focus-within:text-amber-500 transition-colors">
+                    <ChevronDown size={16} />
+                  </div>
                 </div>
               </div>
 

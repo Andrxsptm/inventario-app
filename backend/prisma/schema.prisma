@@ -48,15 +48,16 @@ model Producto {
 }
 
 model Cliente {
-  id           Int      @id @default(autoincrement())
-  nombre       String
-  telefono     String?
-  correo       String?
-  direccion    String?
-  totalCompras Float    @default(0)
-  activo       Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  ventas       Venta[]
+  id             Int      @id @default(autoincrement())
+  identificacion String?
+  nombre         String
+  telefono       String?
+  correo         String?
+  direccion      String?
+  totalCompras   Float    @default(0)
+  activo         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  ventas         Venta[]
 }
 
 model Venta {

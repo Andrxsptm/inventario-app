@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ShoppingBag, Truck, Tag, ChevronRight, Loader2, X, Plus, Trash2, CheckCircle2 } from 'lucide-react'
+import { ShoppingBag, Truck, Tag, ChevronRight, ChevronDown, Loader2, X, Plus, Trash2, CheckCircle2 } from 'lucide-react'
 import api from '../services/api'
 import Button from '../components/common/Button'
 
@@ -57,129 +57,161 @@ function ModalNuevaOrden({ onClose, onCreated }) {
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/25 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl border border-gray-100 shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col animate-in zoom-in-95 fade-in duration-200">
+  const inputCls = 'w-full bg-gray-50 border-2 border-gray-50 focus:border-amber-400 focus:bg-white rounded-2xl py-3 pl-11 pr-4 text-sm font-bold text-gray-700 outline-none transition-all'
+  const iconCls  = 'absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-amber-500 transition-colors pointer-events-none'
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-modal-in">
+
+        {/* Header — mismo estilo que ModalProveedor, color amber */}
+        <div className="p-5 bg-amber-50 border-b border-amber-100 flex justify-between items-center">
           <div>
-            <h2 className="text-sm font-black text-gray-800 uppercase tracking-tighter flex items-center gap-2">
-              <ShoppingBag size={14} className="text-purple-500" /> Nueva Orden de Compra
+            <h2 className="text-lg font-black text-gray-800 flex items-center gap-2">
+              <ShoppingBag className="text-amber-500" size={20} />
+              Nueva Orden de Compra
             </h2>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Crea una orden de abastecimiento</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
+              Registrar abastecimiento de inventario
+            </p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors">
-            <X size={16} />
+          <button onClick={onClose} className="p-2 hover:bg-amber-100 text-amber-600 rounded-full transition-colors">
+            <X size={18} />
           </button>
         </div>
 
+        {/* Success state */}
         {success ? (
-          <div className="flex flex-col items-center gap-3 py-14">
+          <div className="flex flex-col items-center gap-3 py-12">
             <div className="w-12 h-12 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center">
               <CheckCircle2 size={24} />
             </div>
             <p className="text-xs font-black text-green-600 uppercase tracking-tighter">¡Orden creada exitosamente!</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-            <div className="overflow-y-auto custom-scrollbar flex-1 p-6 space-y-4">
+          <>
+            {/* Body */}
+            <form onSubmit={handleSubmit}>
+              <div className="p-6 space-y-4 max-h-[424px] overflow-y-auto custom-scrollbar">
 
-              {/* Proveedor */}
-              <div>
-                <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Proveedor *</label>
-                <select
-                  value={proveedorId}
-                  onChange={e => setProveedorId(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
-                >
-                  <option value="">— Seleccionar proveedor —</option>
-                  {proveedores.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-                </select>
-              </div>
-
-              {/* Items */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Productos</label>
-                  <button type="button" onClick={addItem} className="flex items-center gap-1 text-[10px] font-black text-violet-600 bg-violet-50 hover:bg-violet-100 px-2.5 py-1 rounded-lg transition-colors">
-                    <Plus size={11} /> Agregar
-                  </button>
+                {/* Proveedor */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Proveedor *</label>
+                  <div className="relative group">
+                    <div className={iconCls}><Truck size={16} /></div>
+                    <select
+                      value={proveedorId}
+                      onChange={e => setProveedorId(e.target.value)}
+                      className={`${inputCls} appearance-none cursor-pointer pr-10`}
+                    >
+                      <option value="">— Seleccionar proveedor —</option>
+                      {proveedores.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300 group-focus-within:text-amber-500 transition-colors">
+                      <ChevronDown size={16} />
+                    </div>
+                  </div>
                 </div>
 
-                {items.length === 0 ? (
-                  <p className="text-[10px] text-gray-300 font-bold text-center py-4 uppercase tracking-widest">Sin productos aún</p>
-                ) : (
-                  <div className="space-y-2">
-                    {items.map((it, idx) => (
-                      <div key={idx} className="flex items-center gap-2 bg-gray-50 rounded-xl p-2">
-                        <select
-                          value={it.productoId}
-                          onChange={e => updateItem(idx, 'productoId', e.target.value)}
-                          className="flex-1 bg-white border border-gray-200 rounded-lg px-2.5 py-2 text-xs font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-violet-500/30 min-w-0"
-                        >
-                          <option value="">— Producto —</option>
-                          {productos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-                        </select>
-                        <input
-                          type="number" min={1} value={it.cantidad}
-                          onChange={e => updateItem(idx, 'cantidad', e.target.value)}
-                          placeholder="Cant."
-                          className="w-16 text-center text-xs font-black text-gray-800 bg-white border border-gray-200 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
-                        />
-                        <input
-                          type="number" min={0} step="0.01" value={it.precioUnit}
-                          onChange={e => updateItem(idx, 'precioUnit', e.target.value)}
-                          placeholder="Precio"
-                          className="w-20 text-center text-xs font-black text-gray-800 bg-white border border-gray-200 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
-                        />
-                        <button type="button" onClick={() => removeItem(idx)} className="text-gray-300 hover:text-red-500 transition-colors shrink-0">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    ))}
+                {/* Notas */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Notas (opcional)</label>
+                  <div className="relative group">
+                    <div className={`${iconCls} top-4 translate-y-0`}><Tag size={16} /></div>
+                    <textarea
+                      rows={2}
+                      value={notas}
+                      onChange={e => setNotas(e.target.value)}
+                      placeholder="Observaciones sobre la orden..."
+                      className="w-full bg-gray-50 border-2 border-gray-50 focus:border-amber-400 focus:bg-white rounded-2xl py-3 pl-11 pr-4 text-sm font-bold text-gray-700 outline-none transition-all resize-none placeholder-gray-300"
+                    />
+                  </div>
+                </div>
+
+                {/* Productos */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Productos de la Orden</label>
+                    <Button type="button" onClick={addItem} variant="amber" icon={Plus} className="!px-3 !py-1.5" />
+                  </div>
+
+                  {items.length === 0 ? (
+                    <div className="flex flex-col items-center gap-2 py-6 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+                      <ShoppingBag size={22} className="text-gray-200" />
+                      <p className="text-[10px] text-gray-300 font-black uppercase tracking-widest">Sin productos aún</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {items.map((it, idx) => (
+                        <div key={idx} className="flex items-center gap-2 bg-gray-50 border-2 border-gray-50 rounded-2xl p-2.5">
+                          <div className="relative flex-1 min-w-0 group/select">
+                            <select
+                              value={it.productoId}
+                              onChange={e => updateItem(idx, 'productoId', e.target.value)}
+                              className="w-full appearance-none cursor-pointer bg-white border-2 border-gray-100 focus:border-amber-400 rounded-xl px-3 py-2 pr-8 text-xs font-bold text-gray-700 outline-none transition-all shadow-sm hover:border-gray-200"
+                            >
+                              <option value="">— Producto —</option>
+                              {productos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                            </select>
+                            <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300 group-focus-within/select:text-amber-500 transition-colors">
+                              <ChevronDown size={14} />
+                            </div>
+                          </div>
+                          <input
+                            type="number" min={1} value={it.cantidad}
+                            onChange={e => updateItem(idx, 'cantidad', e.target.value)}
+                            placeholder="Cant."
+                            className="w-16 text-center text-xs font-black text-gray-700 bg-white border-2 border-gray-100 focus:border-amber-400 rounded-xl py-2 outline-none transition-all shadow-sm hover:border-gray-200"
+                          />
+                          <input
+                            type="number" min={0} step="0.01" value={it.precioUnit}
+                            onChange={e => updateItem(idx, 'precioUnit', e.target.value)}
+                            placeholder="Precio"
+                            className="w-20 text-center text-xs font-black text-gray-700 bg-white border-2 border-gray-100 focus:border-amber-400 rounded-xl py-2 outline-none transition-all shadow-sm hover:border-gray-200"
+                          />
+                          <button type="button" onClick={() => removeItem(idx)} className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all shrink-0">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 border border-red-100 text-red-600 text-[10px] font-bold uppercase tracking-wide px-3 py-2 rounded-xl">
+                    {error}
                   </div>
                 )}
               </div>
 
-              {/* Notas */}
-              <div>
-                <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Notas (opcional)</label>
-                <textarea
-                  rows={2} value={notas}
-                  onChange={e => setNotas(e.target.value)}
-                  placeholder="Observaciones sobre la orden..."
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all resize-none"
-                />
-              </div>
-
-              {error && (
-                <div className="bg-red-50 border border-red-100 text-red-600 text-[10px] font-bold uppercase tracking-wide px-3 py-2 rounded-xl">
-                  {error}
+              {/* Footer — mismo patrón: bg-gray-50, total a la izq, botones a la der */}
+              <div className="p-5 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Total estimado</p>
+                  <p className="text-xl font-black text-gray-900">${total.toLocaleString('es', { minimumFractionDigits: 2 })}</p>
                 </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-4 shrink-0 bg-gray-50/50">
-              <div>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Total estimado</p>
-                <p className="text-xl font-black text-gray-900">${total.toLocaleString('es', { minimumFractionDigits: 2 })}</p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    disabled={saving}
+                    className="flex-1 py-2.5 px-4 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-gray-600 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="py-2.5 px-5 text-xs font-black uppercase tracking-widest text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-60 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                  >
+                    {saving && <Loader2 size={13} className="animate-spin" />}
+                    {saving ? 'Guardando...' : 'Crear Orden'}
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <button type="button" onClick={onClose} disabled={saving}
-                  className="px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-gray-500 bg-white border border-gray-200 hover:bg-gray-100 rounded-xl transition-colors">
-                  Cancelar
-                </button>
-                <button type="submit" disabled={saving}
-                  className="px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 rounded-xl flex items-center gap-1.5 transition-all active:scale-[0.98]">
-                  {saving ? <Loader2 size={13} className="animate-spin" /> : <ShoppingBag size={13} />}
-                  {saving ? 'Guardando...' : 'Crear Orden'}
-                </button>
-              </div>
-            </div>
-          </form>
+            </form>
+          </>
         )}
       </div>
     </div>
@@ -216,11 +248,8 @@ export default function Compras() {
           </h1>
           <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">Abastecimiento y logística de entrada</p>
         </div>
-        <Button
-          onClick={() => setShowModal(true)}
-          icon={ShoppingBag}
-        >
-          Generar Orden
+        <Button onClick={() => setShowModal(true)} icon={Plus}>
+          Nueva Compra
         </Button>
       </div>
 
