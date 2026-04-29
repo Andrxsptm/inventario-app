@@ -107,13 +107,16 @@ router.get('/alertas', authenticate, async (req, res) => {
         mensaje: `${p.nombre} tiene ${p.stockActual} unidades (mín: ${p.stockMinimo})`,
         fecha: p.createdAt,
       })),
-      ...ordenesPendientes.map(o => ({
-        id: `orden-${o.id}`,
-        tipo: 'orden_pendiente',
-        titulo: 'Orden Pendiente',
-        mensaje: `Orden #${o.id} de ${o.proveedor.nombre} está pendiente`,
-        fecha: o.fecha,
-      })),
+      ...ordenesPendientes.map(o => {
+        const entrega = o.fechaEntrega ? new Date(o.fechaEntrega).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Sin fecha asignada';
+        return {
+          id: `orden-${o.id}`,
+          tipo: 'orden_pendiente',
+          titulo: 'Orden Pendiente',
+          mensaje: `La orden #${o.id} de ${o.proveedor.nombre} está pendiente. Fecha de entrega: ${entrega}`,
+          fecha: o.fecha,
+        }
+      }),
     ]
 
     res.json({ alertas, total: alertas.length })

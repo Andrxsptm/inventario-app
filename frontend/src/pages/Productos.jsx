@@ -296,6 +296,8 @@ export default function Productos() {
   const [modal,       setModal]       = useState(null)
   const [confirmDel,  setConfirmDel]  = useState(null)
   const [showFilters, setShowFilters] = useState(false)
+  const [expandido,   setExpandido]   = useState(false)
+  const LIMITE_VISTA = 8
 
   const [filters, setFilters] = useState({
     stockDir: '',    // '' | 'gt' | 'lt'
@@ -354,6 +356,9 @@ export default function Productos() {
     }
     return true
   })
+
+  const productosVisibles = expandido ? filtered : filtered.slice(0, LIMITE_VISTA)
+  const hayMas = !loading && filtered.length > LIMITE_VISTA
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10 uppercase tracking-tighter">
@@ -587,15 +592,36 @@ export default function Productos() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {filtered.map(p => (
-            <ProductCard
-              key={p.id}
-              producto={p}
-              onEdit={prod => setModal(prod)}
-              onDelete={prod => setConfirmDel(prod)}
-            />
-          ))}
+        <div className="space-y-4">
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pr-1 ${
+            expandido ? 'max-h-[780px] overflow-y-auto custom-scrollbar' : ''
+          }`}>
+            {productosVisibles.map(p => (
+              <ProductCard
+                key={p.id}
+                producto={p}
+                onEdit={prod => setModal(prod)}
+                onDelete={prod => setConfirmDel(prod)}
+              />
+            ))}
+          </div>
+
+          {hayMas && (
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={() => setExpandido(v => !v)}
+                className="flex items-center gap-2 px-8 py-3 bg-blue-50 hover:bg-blue-100 text-blue-600 font-black text-[11px] uppercase tracking-widest rounded-full transition-all active:scale-[0.97] shadow-sm"
+              >
+                {expandido ? 'Ver menos' : 'Ver todos'}
+                <span
+                  className="inline-block transition-transform duration-200"
+                  style={{ transform: expandido ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                >
+                  →
+                </span>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

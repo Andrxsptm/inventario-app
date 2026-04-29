@@ -161,7 +161,7 @@ export default function Dashboard() {
                 {loading ? (
                   <div className="space-y-4">{Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-8" />)}</div>
                 ) : topProductos.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-4 max-h-[160px] overflow-y-auto custom-scrollbar pr-2">
                     {topProductos.map((p, i) => (
                       <div key={i} className="flex flex-col gap-1">
                         <div className="flex justify-between text-[11px] font-bold">
@@ -184,8 +184,8 @@ export default function Dashboard() {
                 {loading ? (
                   <div className="space-y-4">{Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
                 ) : productosAgotarse.length > 0 ? (
-                  <div className="space-y-4">
-                    {productosAgotarse.slice(0, 4).map((p, i) => (
+                  <div className="space-y-4 max-h-[160px] overflow-y-auto custom-scrollbar pr-2">
+                    {productosAgotarse.map((p, i) => (
                       <div key={i} className="flex items-center justify-between p-2 hover:bg-red-50 rounded-xl transition-colors">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-red-100 text-red-600 rounded-lg flex items-center justify-center">
@@ -238,7 +238,7 @@ export default function Dashboard() {
                    <AlertCircle size={12} />
                 </div>
              </div>
-             <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 space-y-3">
+             <div className="flex-1 max-h-[300px] overflow-y-auto custom-scrollbar pr-1 space-y-3">
                {loading ? (
                  Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-16" />)
                ) : productosAgotarse.length > 0 ? (

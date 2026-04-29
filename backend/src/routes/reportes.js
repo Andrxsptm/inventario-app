@@ -7,14 +7,23 @@ const prisma = new PrismaClient()
 // GET /api/reportes/dashboard
 router.get('/dashboard', authenticate, async (_, res) => {
   const hoy = new Date(); hoy.setHours(0,0,0,0)
-  const [ventasHoy, stockBajo, ultimasVentas, ultimosClientes, productosAgotarse] = await Promise.all([
+  const productosActivos = await prisma.producto.findMany({ where: { activo: true } })
+  const productosStockCritico = productosActivos
+    .filter(p => p.stockActual <= p.stockMinimo)
+    .sort((a, b) => a.stockActual - b.stockActual)
+
+  const [ventasHoy, ultimasVentas, ultimosClientes] = await Promise.all([
     prisma.venta.aggregate({ where: { fecha: { gte: hoy }, estado: 'COMPLETADA' }, _sum: { total: true } }),
-    prisma.producto.findMany({ where: { activo: true } }).then(ps => ps.filter(p => p.stockActual <= p.stockMinimo).length),
     prisma.venta.findMany({ take: 5, orderBy: { fecha: 'desc' }, include: { items: { include: { producto: true } } } }),
     prisma.cliente.findMany({ take: 5, orderBy: { createdAt: 'desc' } }),
-    prisma.producto.findMany({ where: { activo: true, stockActual: { lte: 10 } }, orderBy: { stockActual: 'asc' }, take: 10 }),
   ])
-  res.json({ ventasHoy: ventasHoy._sum.total ?? 0, stockBajo, ultimasVentas, ultimosClientes, productosAgotarse })
+  res.json({ 
+    ventasHoy: ventasHoy._sum.total ?? 0, 
+    stockBajo: productosStockCritico.length, 
+    ultimasVentas, 
+    ultimosClientes, 
+    productosAgotarse: productosStockCritico 
+  })
 })
 
 // GET /api/reportes/ventas?desde=&hasta=

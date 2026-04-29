@@ -1,66 +1,40 @@
 import React, { useState, useEffect } from 'react'
 import { 
-  Settings, Moon, Sun, 
-  Database, Bell, Globe, 
-  ExternalLink, Sparkles, Shield, Lock
+  Settings, Database, ExternalLink, Shield, Lock, Download, LifeBuoy, History, CheckCircle2, Clock
 } from 'lucide-react'
 import Button from '../components/common/Button'
 
 export default function Configuracion() {
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark')
   const [notifications, setNotifications] = useState(true)
   const [isBackingUp, setIsBackingUp] = useState(false)
-
-  // Lógica de Modo Oscuro
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    }
-  }, [darkMode])
+  const [backups, setBackups] = useState(() => {
+    const saved = localStorage.getItem('stocker_backups')
+    return saved ? JSON.parse(saved) : []
+  })
 
   // Simulación de Backup
   const handleBackup = () => {
     setIsBackingUp(true)
     setTimeout(() => {
-      const data = { system: 'Stocker', version: '2.4', timestamp: new Date().toISOString() }
+      const now = new Date()
+      const data = { system: 'Stocker', version: '2.4', timestamp: now.toISOString() }
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `stocker_backup_${new Date().toISOString().slice(0,10)}.json`
+      a.download = `stocker_backup_${now.toISOString().slice(0,10)}.json`
       a.click()
+      
+      const newBackup = { id: Date.now(), fecha: now.toISOString(), size: '1.2 MB', estado: 'Exitoso' }
+      const updatedBackups = [newBackup, ...backups].slice(0, 5) // Mantener últimos 5
+      setBackups(updatedBackups)
+      localStorage.setItem('stocker_backups', JSON.stringify(updatedBackups))
+      
       setIsBackingUp(false)
     }, 1500)
   }
 
   const sections = [
-    {
-      id: 'personalizacion',
-      title: 'Apariencia y Estilo',
-      icon: Sparkles,
-      color: 'text-violet-500',
-      bg: 'bg-violet-50',
-      items: [
-        { 
-          label: 'Modo Oscuro', 
-          desc: 'Optimiza la visualización para entornos con poca luz', 
-          action: (
-            <button 
-              onClick={() => setDarkMode(!darkMode)}
-              className={`w-14 h-7 rounded-full transition-all relative border-2 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'}`}
-            >
-              <div className={`absolute top-0.5 w-5 h-5 rounded-full flex items-center justify-center transition-all ${darkMode ? 'right-1 bg-violet-500' : 'left-1 bg-white shadow-sm'}`}>
-                {darkMode ? <Moon size={10} className="text-white" /> : <Sun size={10} className="text-amber-500" />}
-              </div>
-            </button>
-          )
-        }
-      ]
-    },
     {
       id: 'seguridad',
       title: 'Seguridad y Datos',
@@ -156,6 +130,49 @@ export default function Configuracion() {
             </div>
           ))}
         </div>
+
+        {/* Panel de Registro de Backups */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-[2.5rem] p-3 border border-gray-100 shadow-sm transition-all hover:shadow-xl hover:shadow-gray-200/40">
+             <div className="px-6 py-4 flex items-center gap-4">
+                <div className="w-12 h-12 bg-green-50 text-green-500 rounded-3xl flex items-center justify-center shadow-inner">
+                  <Database size={24} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black text-gray-800 uppercase tracking-widest">Registro de Backups</h2>
+                  <p className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Últimas copias de seguridad guardadas</p>
+                </div>
+             </div>
+             <div className="bg-gray-50/50 rounded-[2rem] p-6 mt-2">
+                {backups.length === 0 ? (
+                  <div className="py-8 text-center flex flex-col items-center justify-center text-gray-300">
+                     <Clock size={32} className="mb-2" />
+                     <p className="text-[10px] font-bold uppercase tracking-widest">No hay backups recientes</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {backups.map((backup) => (
+                      <div key={backup.id} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                         <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center text-green-500">
+                               <CheckCircle2 size={16} />
+                            </div>
+                            <div>
+                               <p className="text-[11px] font-black text-gray-700">{new Date(backup.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' })}</p>
+                               <p className="text-[9px] text-gray-400 font-bold uppercase mt-0.5">{backup.size}</p>
+                            </div>
+                         </div>
+                         <span className="bg-green-50 text-green-600 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">
+                           {backup.estado}
+                         </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+             </div>
+          </div>
+        </div>
+
       </div>
     </div>
   )
