@@ -85,14 +85,15 @@ model ItemVenta {
 }
 
 model OrdenCompra {
-  id          Int               @id @default(autoincrement())
-  fecha       DateTime          @default(now())
-  estado      String            @default("PENDIENTE")
-  total       Float             @default(0)
-  notas       String?
-  proveedorId Int
-  items       ItemOrdenCompra[]
-  proveedor   Proveedor         @relation(fields: [proveedorId], references: [id])
+  id           Int               @id @default(autoincrement())
+  fecha        DateTime          @default(now())
+  fechaEntrega DateTime?
+  estado       String            @default("PENDIENTE")
+  total        Float             @default(0)
+  notas        String?
+  proveedorId  Int
+  items        ItemOrdenCompra[]
+  proveedor    Proveedor         @relation(fields: [proveedorId], references: [id])
 }
 
 model ItemOrdenCompra {

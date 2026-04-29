@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { 
-  Settings, HelpCircle, Info, Moon, Sun, 
-  ShieldCheck, Database, Bell, Globe, 
-  Mail, MessageSquare, ExternalLink, Sparkles, Shield,
-  Download, LifeBuoy, History, Lock
+  Settings, Moon, Sun, 
+  Database, Bell, Globe, 
+  ExternalLink, Sparkles, Shield, Lock
 } from 'lucide-react'
 import Button from '../components/common/Button'
 

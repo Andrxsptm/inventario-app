@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Plus, Search, Trash2, Package, Filter, Loader2, X,
   CheckCircle2, Tag, Truck, DollarSign, Layers, AlertCircle, ChevronDown
@@ -280,13 +280,41 @@ function ProductCard({ producto: p, onEdit, onDelete }) {
 /* ────────────────────────────────────────────────── */
 /* Página principal                                  */
 /* ────────────────────────────────────────────────── */
+const ESTADOS = [
+  { value: '', label: 'Todos los estados' },
+  { value: 'ok',   label: 'Stock OK' },
+  { value: 'bajo', label: 'Stock Bajo' },
+  { value: 'agotado', label: 'Agotado' },
+]
+
 export default function Productos() {
   const [productos,   setProductos]   = useState([])
+  const [proveedores, setProveedores] = useState([])
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState(null)
   const [search,      setSearch]      = useState('')
-  const [modal,       setModal]       = useState(null)      // null | 'new' | {producto}
+  const [modal,       setModal]       = useState(null)
   const [confirmDel,  setConfirmDel]  = useState(null)
+  const [showFilters, setShowFilters] = useState(false)
+
+  const [filters, setFilters] = useState({
+    stockDir: '',    // '' | 'gt' | 'lt'
+    stockVal: '',
+    estado:   '',
+    proveedorId: '',
+  })
+
+  function setF(key, val) { setFilters(f => ({ ...f, [key]: val })) }
+
+  const activeCount = [
+    filters.stockDir && filters.stockVal !== '',
+    filters.estado !== '',
+    filters.proveedorId !== '',
+  ].filter(Boolean).length
+
+  function clearFilters() {
+    setFilters({ stockDir: '', stockVal: '', estado: '', proveedorId: '' })
+  }
 
   function load() {
     setLoading(true)
@@ -296,7 +324,10 @@ export default function Productos() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+    api.get('/proveedores').then(r => setProveedores(r.data.filter(p => p.activo))).catch(() => {})
+  }, [])
 
   async function eliminar(p) {
     try {
@@ -306,10 +337,23 @@ export default function Productos() {
     } catch { alert('Error al eliminar producto') }
   }
 
-  const filtered = productos.filter(p =>
-    p.nombre.toLowerCase().includes(search.toLowerCase()) ||
-    (p.proveedor?.nombre ?? '').toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = productos.filter(p => {
+    if (search && !p.nombre.toLowerCase().includes(search.toLowerCase())) return false
+    if (filters.proveedorId && p.proveedorId !== parseInt(filters.proveedorId)) return false
+    if (filters.estado) {
+      const ok  = p.stockActual > p.stockMinimo
+      const ago = p.stockActual === 0
+      if (filters.estado === 'ok'      && !ok)          return false
+      if (filters.estado === 'agotado' && !ago)         return false
+      if (filters.estado === 'bajo'    && (ok || ago))  return false
+    }
+    if (filters.stockDir && filters.stockVal !== '') {
+      const v = Number(filters.stockVal)
+      if (filters.stockDir === 'gt' && !(p.stockActual > v))  return false
+      if (filters.stockDir === 'lt' && !(p.stockActual < v))  return false
+    }
+    return true
+  })
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10 uppercase tracking-tighter">
@@ -375,21 +419,157 @@ export default function Productos() {
         </div>
       )}
 
-      {/* Search */}
+      {/* Search + Filter dropdown */}
       <div className="flex gap-3">
         <div className="flex-1 flex items-center gap-3 bg-white px-4 py-2.5 rounded-2xl border border-gray-100 shadow-sm focus-within:border-blue-300 transition-all">
           <Search size={18} className="text-gray-300 shrink-0" />
           <input
             type="text"
-            placeholder="Buscar por nombre o proveedor..."
+            placeholder="Buscar por nombre del producto..."
             className="bg-transparent border-none outline-none text-sm w-full font-medium text-gray-700 placeholder-gray-300"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
+          {search && (
+            <button onClick={() => setSearch('')} className="text-gray-300 hover:text-gray-500 transition-colors shrink-0">
+              <X size={14} />
+            </button>
+          )}
         </div>
-        <button className="flex items-center gap-2 px-4 py-2.5 bg-white text-gray-500 rounded-2xl border border-gray-100 hover:bg-gray-50 transition-all text-[10px] font-black uppercase tracking-widest shadow-sm">
-          <Filter size={15} /> Filtros
-        </button>
+
+        {/* Filter button + popover */}
+        <div className="relative">
+          <button
+            onClick={() => setShowFilters(v => !v)}
+            className={`relative flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-[10px] font-black uppercase tracking-widest shadow-sm transition-all ${
+              showFilters || activeCount > 0
+                ? 'bg-blue-50 border-blue-200 text-blue-600'
+                : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'
+            }`}
+          >
+            <Filter size={15} /> Filtros
+            {activeCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-blue-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
+                {activeCount}
+              </span>
+            )}
+          </button>
+
+          {showFilters && (
+            <>
+              {/* Overlay para cerrar al hacer clic fuera */}
+              <div className="fixed inset-0 z-[9]" onClick={() => setShowFilters(false)} />
+
+              {/* Popover flotante */}
+              <div className="absolute right-0 top-full mt-2 z-10 w-72 bg-white rounded-[1.5rem] shadow-2xl border border-gray-100 p-4 animate-in zoom-in-95 fade-in slide-in-from-top-2 duration-200">
+
+                {/* Header */}
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-1.5">
+                    <Filter size={12} /> Filtros
+                  </p>
+                  {activeCount > 0 && (
+                    <button
+                      onClick={clearFilters}
+                      className="text-[9px] font-black text-red-400 hover:text-red-600 uppercase tracking-widest flex items-center gap-1 transition-colors"
+                    >
+                      <X size={10} /> Limpiar todo
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+
+                  {/* Stock */}
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Cantidad de stock</label>
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => setF('stockDir', filters.stockDir === 'gt' ? '' : 'gt')}
+                        className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl border-2 transition-all ${
+                          filters.stockDir === 'gt'
+                            ? 'bg-blue-50 border-blue-300 text-blue-600'
+                            : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-gray-200'
+                        }`}
+                      >
+                        &gt; Mayor
+                      </button>
+                      <button
+                        onClick={() => setF('stockDir', filters.stockDir === 'lt' ? '' : 'lt')}
+                        className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl border-2 transition-all ${
+                          filters.stockDir === 'lt'
+                            ? 'bg-blue-50 border-blue-300 text-blue-600'
+                            : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-gray-200'
+                        }`}
+                      >
+                        &lt; Menor
+                      </button>
+                    </div>
+                    <input
+                      type="number" min={0}
+                      placeholder="Valor de stock..."
+                      value={filters.stockVal}
+                      onChange={e => setF('stockVal', e.target.value)}
+                      disabled={!filters.stockDir}
+                      className="w-full bg-gray-50 border-2 border-gray-100 focus:border-blue-300 rounded-xl px-3 py-2 text-xs font-bold text-gray-700 outline-none transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    />
+                  </div>
+
+                  {/* Estado */}
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Estado</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {ESTADOS.map(e => (
+                        <button
+                          key={e.value}
+                          onClick={() => setF('estado', filters.estado === e.value ? '' : e.value)}
+                          className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl border-2 transition-all ${
+                            filters.estado === e.value
+                              ? 'bg-blue-50 border-blue-300 text-blue-600'
+                              : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-gray-200'
+                          }`}
+                        >
+                          {e.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Proveedor */}
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Proveedor</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        onClick={() => setF('proveedorId', '')}
+                        className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl border-2 transition-all ${
+                          filters.proveedorId === ''
+                            ? 'bg-blue-50 border-blue-300 text-blue-600'
+                            : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-gray-200'
+                        }`}
+                      >
+                        Todos
+                      </button>
+                      {proveedores.map(pv => (
+                        <button
+                          key={pv.id}
+                          onClick={() => setF('proveedorId', filters.proveedorId === String(pv.id) ? '' : String(pv.id))}
+                          className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl border-2 transition-all ${
+                            filters.proveedorId === String(pv.id)
+                              ? 'bg-blue-50 border-blue-300 text-blue-600'
+                              : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-gray-200'
+                          }`}
+                        >
+                          {pv.nombre}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* KPI Cards grid */}

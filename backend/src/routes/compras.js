@@ -13,13 +13,30 @@ router.get('/', authenticate, async (_, res) => {
 })
 
 router.post('/', authenticate, requireAdmin, async (req, res) => {
-  const { proveedorId, items, notas } = req.body
-  let total = items.reduce((acc, i) => acc + i.cantidad * i.precioUnit, 0)
-  const orden = await prisma.ordenCompra.create({
-    data: { proveedorId, total, notas, items: { create: items.map(i => ({ ...i, subtotal: i.cantidad * i.precioUnit })) } },
-    include: { items: true },
-  })
-  res.status(201).json(orden)
+  try {
+    const { proveedorId, items, notas, fechaEntrega } = req.body
+    let total = items.reduce((acc, i) => acc + Number(i.cantidad) * Number(i.precioUnit), 0)
+    const orden = await prisma.ordenCompra.create({
+      data: { 
+        proveedorId: parseInt(proveedorId), 
+        total, 
+        notas, 
+        fechaEntrega: fechaEntrega ? new Date(fechaEntrega) : null,
+        items: { 
+          create: items.map(i => ({ 
+            productoId: parseInt(i.productoId),
+            cantidad: Number(i.cantidad),
+            precioUnit: Number(i.precioUnit),
+            subtotal: Number(i.cantidad) * Number(i.precioUnit) 
+          })) 
+        } 
+      },
+      include: { items: true },
+    })
+    res.status(201).json(orden)
+  } catch (err) {
+    res.status(400).json({ error: err.message })
+  }
 })
 
 // Marcar como recibida → actualiza stock

@@ -35,10 +35,10 @@ export default function Clientes() {
         <div>
           <h1 className="text-2xl font-black text-gray-800 flex items-center gap-3">
             <Users className="text-indigo-500" size={28} />
-            Cartera de Clientes
+            Clientes
           </h1>
           <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">
-            Directorio de clientes registrados en el sistema
+            Clientes registrados
           </p>
         </div>
       </div>
@@ -52,7 +52,7 @@ export default function Clientes() {
         <Search size={20} className="text-gray-300" />
         <input
           type="text"
-          placeholder="Buscar cliente por nombre o correo..."
+          placeholder="Buscar cliente por nombre o identificación..."
           className="bg-transparent border-none outline-none text-sm w-full"
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -67,7 +67,7 @@ export default function Clientes() {
           {loading ? (
             <div className="flex items-center justify-center py-16 gap-3 text-gray-400">
               <Loader2 size={20} className="animate-spin" />
-              <span className="text-xs font-bold uppercase">Cargando clientes...</span>
+              <span className="text-xs font-bold uppercase">Cargando clientes</span>
             </div>
           ) : filtered.length === 0 ? (
             <p className="text-center text-gray-300 text-sm font-bold py-10">
@@ -91,7 +91,7 @@ export default function Clientes() {
                     </div>
                   </div>
                   <div className="w-full pt-4 border-t border-gray-50">
-                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Inversión Total</p>
+                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Gasto Total</p>
                     <p className="text-xl font-black text-indigo-600">${(c.totalCompras ?? 0).toLocaleString('es', { minimumFractionDigits: 2 })}</p>
                   </div>
                 </div>
@@ -107,7 +107,7 @@ export default function Clientes() {
               <div className="flex items-center gap-2 mb-4">
                 <Star size={14} className="text-indigo-500" />
                 <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest">
-                  Más Frecuentes
+                  Clientes Frecuentes
                 </h2>
               </div>
 

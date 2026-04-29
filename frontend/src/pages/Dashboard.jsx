@@ -97,7 +97,7 @@ export default function Dashboard() {
              <BarChart3 className="text-blue-500" size={28} />
              Reporte General
           </h1>
-          <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">Resumen general de operaciones y rendimiento</p>
+          <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">Resumen general de operaciones y ventas</p>
         </div>
         {loading && <Loader2 size={20} className="text-blue-400 animate-spin" />}
       </div>
@@ -180,7 +180,7 @@ export default function Dashboard() {
              </div>
 
              <div className="card">
-                <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Stock Crítico</h2>
+                <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Productos en stock crítico</h2>
                 {loading ? (
                   <div className="space-y-4">{Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
                 ) : productosAgotarse.length > 0 ? (
@@ -265,12 +265,12 @@ export default function Dashboard() {
                 })
                ) : (
                  <p className="text-[10px] text-center text-green-500 font-bold mt-4 uppercase tracking-tighter">
-                   ✓ Sin alertas críticas
+                   Sin alertas críticas
                  </p>
                )}
              </div>
              <p className="text-[10px] text-center text-gray-400 font-bold mt-4 uppercase tracking-tighter">
-                Todas las alertas críticas están aquí
+                Todas las alertas de stock están aquí
              </p>
           </div>
         </div>
