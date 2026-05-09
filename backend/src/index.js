@@ -15,7 +15,7 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 4000
 
-app.use(cors({ origin: 'http://localhost:3000' }))
+app.use(cors({ origin: process.env.FRONTEND_URL || '*' }))
 app.use(express.json())
 
 // Routes
