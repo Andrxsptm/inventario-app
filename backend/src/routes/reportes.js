@@ -5,33 +5,60 @@ const router = Router()
 const prisma = new PrismaClient()
 
 // GET /api/reportes/dashboard
-router.get('/dashboard', authenticate, async (_, res) => {
+router.get('/dashboard', authenticate, async (req, res) => {
+  const esAdmin = req.user.rol === 'ADMINISTRADOR'
+  const usuarioId = req.user.id
+
   const hoy = new Date(); hoy.setHours(0,0,0,0)
+  const filtroVentas = esAdmin ? {} : { usuarioId }
+
   const productosActivos = await prisma.producto.findMany({ where: { activo: true } })
   const productosStockCritico = productosActivos
     .filter(p => p.stockActual <= p.stockMinimo)
     .sort((a, b) => a.stockActual - b.stockActual)
 
   const [ventasHoy, ultimasVentas, ultimosClientes] = await Promise.all([
-    prisma.venta.aggregate({ where: { fecha: { gte: hoy }, estado: 'COMPLETADA' }, _sum: { total: true } }),
-    prisma.venta.findMany({ take: 5, orderBy: { fecha: 'desc' }, include: { items: { include: { producto: true } } } }),
-    prisma.cliente.findMany({ take: 5, orderBy: { createdAt: 'desc' } }),
+    prisma.venta.aggregate({
+      where: { ...filtroVentas, fecha: { gte: hoy }, estado: 'COMPLETADA' },
+      _sum: { total: true }
+    }),
+    prisma.venta.findMany({
+      where: filtroVentas,
+      take: 5,
+      orderBy: { fecha: 'desc' },
+      include: { items: { include: { producto: true } }, usuario: { select: { nombre: true } } }
+    }),
+    esAdmin
+      ? prisma.cliente.findMany({ take: 5, orderBy: { createdAt: 'desc' } })
+      : prisma.cliente.findMany({
+          where: { ventas: { some: { usuarioId } } },
+          take: 5,
+          orderBy: { createdAt: 'desc' }
+        }),
   ])
-  res.json({ 
-    ventasHoy: ventasHoy._sum.total ?? 0, 
-    stockBajo: productosStockCritico.length, 
-    ultimasVentas, 
-    ultimosClientes, 
-    productosAgotarse: productosStockCritico 
+
+  res.json({
+    ventasHoy: ventasHoy._sum.total ?? 0,
+    stockBajo: productosStockCritico.length,
+    ultimasVentas,
+    ultimosClientes,
+    productosAgotarse: productosStockCritico,
+    esAdmin,
   })
 })
 
 // GET /api/reportes/ventas?desde=&hasta=
 router.get('/ventas', authenticate, async (req, res) => {
+  const esAdmin = req.user.rol === 'ADMINISTRADOR'
   const { desde, hasta } = req.query
+  const filtroUsuario = esAdmin ? {} : { usuarioId: req.user.id }
   const data = await prisma.venta.findMany({
-    where: { fecha: { gte: desde ? new Date(desde) : undefined, lte: hasta ? new Date(hasta) : undefined }, estado: 'COMPLETADA' },
-    include: { items: { include: { producto: true } }, cliente: true },
+    where: {
+      ...filtroUsuario,
+      fecha: { gte: desde ? new Date(desde) : undefined, lte: hasta ? new Date(hasta) : undefined },
+      estado: 'COMPLETADA'
+    },
+    include: { items: { include: { producto: true } }, cliente: true, usuario: { select: { nombre: true } } },
     orderBy: { fecha: 'desc' },
   })
   res.json(data)

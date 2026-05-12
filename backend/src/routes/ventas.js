@@ -1,16 +1,25 @@
 import { Router } from 'express'
 import { PrismaClient } from '@prisma/client'
 import { authenticate, requireAdmin } from '../middleware/auth.js'
+import { generarNumeroFactura } from '../services/facturaService.js'
 const router = Router()
 const prisma = new PrismaClient()
 
 // GET /api/ventas
-router.get('/', authenticate, async (_, res) => {
-  const data = await prisma.venta.findMany({
-    include: { cliente: true, usuario: { select: { nombre: true } }, items: { include: { producto: true } } },
-    orderBy: { fecha: 'desc' },
-  })
-  res.json(data)
+router.get('/', authenticate, async (req, res) => {
+  try {
+    const esAdmin = req.user.rol === 'ADMINISTRADOR'
+    const filtro = esAdmin ? {} : { usuarioId: parseInt(req.user.id) }
+    const data = await prisma.venta.findMany({
+      where: filtro,
+      include: { cliente: true, usuario: { select: { nombre: true } }, items: { include: { producto: true } } },
+      orderBy: { fecha: 'desc' },
+    })
+    res.json(data)
+  } catch (err) {
+    console.error('[GET /ventas]', err.message)
+    res.status(500).json({ error: err.message })
+  }
 })
 
 // POST /api/ventas  — crea venta y descuenta stock
@@ -30,8 +39,9 @@ router.post('/', authenticate, async (req, res) => {
         itemsData.push({ productoId: item.productoId, cantidad: item.cantidad, precioUnit: item.precioUnit, subtotal })
         await tx.producto.update({ where: { id: item.productoId }, data: { stockActual: { decrement: item.cantidad } } })
       }
+      const numeroFactura = await generarNumeroFactura(tx)
       const venta = await tx.venta.create({
-        data: { total, notas, usuarioId: req.user.id, clienteId: clienteId ?? null, items: { create: itemsData } },
+        data: { total, notas, usuarioId: req.user.id, clienteId: clienteId ?? null, numeroFactura, items: { create: itemsData } },
         include: { items: true },
       })
       if (clienteId) await tx.cliente.update({ where: { id: clienteId }, data: { totalCompras: { increment: total } } })

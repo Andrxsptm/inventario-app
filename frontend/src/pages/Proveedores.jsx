@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Truck, Mail, Phone, Globe, X, MapPin, Notebook, Loader2, Pencil, Trash2, ToggleLeft, ToggleRight, CheckCircle2, Plus } from 'lucide-react'
+import { Truck, Mail, Phone, Globe, X, MapPin, Notebook, Loader2, Pencil, Trash2, ToggleLeft, ToggleRight, CheckCircle2, Plus, CreditCard } from 'lucide-react'
 import api from '../services/api'
 import Button from '../components/common/Button'
 
 /* ─── Modal agregar/editar proveedor ─── */
 function ModalProveedor({ initial, onClose, onSaved }) {
   const isEdit = !!initial?.id
-  const [form,   setForm]   = useState(initial ?? { nombre: '', telefono: '', correo: '', direccion: '', notas: '' })
+  const [form,   setForm]   = useState(initial ?? { nombre: '', telefono: '', nit: '', direccion: '', notas: '' })
   const [saving, setSaving] = useState(false)
   const [error,  setError]  = useState('')
   const [success, setSuccess] = useState(false)
@@ -64,7 +64,7 @@ function ModalProveedor({ initial, onClose, onSaved }) {
             <div className="p-6 space-y-4">
               {[
                 { label: 'Nombre de la Empresa *', key: 'nombre', icon: Globe, type: 'text', placeholder: 'Distribuidora Central S.A.' },
-                { label: 'Correo Electrónico',     key: 'correo', icon: Mail,  type: 'email', placeholder: 'ventas@ejemplo.com' },
+                { label: 'NIT',                    key: 'nit', icon: CreditCard,  type: 'text', placeholder: '800.000.000 - 9' },
                 { label: 'Teléfono',               key: 'telefono', icon: Phone, type: 'tel', placeholder: '+57...' },
                 { label: 'Dirección',              key: 'direccion', icon: MapPin, type: 'text', placeholder: 'Calle 123 #45-67' },
                 { label: 'Notas',                  key: 'notas', icon: Notebook, type: 'text', placeholder: 'Observaciones...' },
@@ -79,7 +79,23 @@ function ModalProveedor({ initial, onClose, onSaved }) {
                       type={type}
                       placeholder={placeholder}
                       value={form[key]}
-                      onChange={e => setForm({ ...form, [key]: e.target.value })}
+                      onChange={e => {
+                        let val = e.target.value;
+                        if (key === 'nit') {
+                          let digits = val.replace(/\D/g, '');
+                          if (digits.length > 10) digits = digits.slice(0, 10);
+                          if (digits.length > 0) {
+                            let formatted = digits.slice(0, 3);
+                            if (digits.length > 3) formatted += '.' + digits.slice(3, 6);
+                            if (digits.length > 6) formatted += '.' + digits.slice(6, 9);
+                            if (digits.length > 9) formatted += ' - ' + digits.slice(9, 10);
+                            val = formatted;
+                          } else {
+                            val = '';
+                          }
+                        }
+                        setForm({ ...form, [key]: val });
+                      }}
                       className={inputCls}
                     />
                   </div>
@@ -133,7 +149,7 @@ function PanelActivos({ proveedores }) {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-bold text-gray-800">{p.nombre}</p>
-                <p className="text-[10px] text-gray-400 font-medium">{p.correo ?? 'Sin correo'}</p>
+                <p className="text-[10px] text-gray-400 font-medium">{p.nit ? `NIT: ${p.nit}` : 'Sin NIT'}</p>
               </div>
               <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-green-100 text-green-600 shrink-0">
                 activo
@@ -269,7 +285,7 @@ export default function Proveedores() {
                     <h3 className="text-base font-black text-gray-800">{p.nombre}</h3>
                     <div className="flex flex-wrap gap-3 mt-1">
                       <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                        <Mail size={12} className="text-amber-400" /> {p.correo ?? '—'}
+                        <CreditCard size={12} className="text-amber-400" /> {p.nit ? `NIT: ${p.nit}` : '—'}
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-gray-400">
                         <Phone size={12} className="text-amber-400" /> {p.telefono ?? '—'}

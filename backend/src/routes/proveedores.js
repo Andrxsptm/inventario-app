@@ -9,13 +9,13 @@ router.get('/', authenticate, async (_, res) => {
   res.json(data)
 })
 router.post('/', authenticate, requireAdmin, async (req, res) => {
-  const { nombre, telefono, correo, direccion, notas } = req.body
-  const data = await prisma.proveedor.create({ data: { nombre, telefono, correo, direccion, notas } })
+  const { nombre, telefono, nit, direccion, notas } = req.body
+  const data = await prisma.proveedor.create({ data: { nombre, telefono, nit, direccion, notas } })
   res.status(201).json(data)
 })
 router.put('/:id', authenticate, requireAdmin, async (req, res) => {
-  const { nombre, telefono, correo, direccion, notas } = req.body
-  const data = await prisma.proveedor.update({ where: { id: parseInt(req.params.id) }, data: { nombre, telefono, correo, direccion, notas } })
+  const { nombre, telefono, nit, direccion, notas } = req.body
+  const data = await prisma.proveedor.update({ where: { id: parseInt(req.params.id) }, data: { nombre, telefono, nit, direccion, notas } })
   res.json(data)
 })
 router.put('/:id/toggle-activo', authenticate, requireAdmin, async (req, res) => {

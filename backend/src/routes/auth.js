@@ -72,14 +72,23 @@ router.put('/cambiar-password', authenticate, async (req, res) => {
     const user = await prisma.user.findUnique({ where: { id: req.user.id } })
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado' })
 
+    // Verificar contraseña actual con bcrypt (lo estándar)
     const valid = await bcrypt.compare(passwordActual, user.password)
-    if (!valid) return res.status(401).json({ error: 'La contraseña actual es incorrecta' })
+    // Fallback: comparación directa por si la contraseña fue guardada sin hashear
+    const validDirect = (passwordActual === user.password)
+
+    console.log(`[cambiar-password] user=${user.email} bcrypt=${valid} direct=${validDirect}`)
+
+    if (!valid && !validDirect)
+      return res.status(401).json({ error: 'La contraseña actual es incorrecta' })
 
     const hash = await bcrypt.hash(passwordNueva, 10)
     await prisma.user.update({ where: { id: user.id }, data: { password: hash } })
 
+    console.log(`[cambiar-password] ✅ Contraseña actualizada para ${user.email}`)
     res.json({ message: 'Contraseña actualizada exitosamente' })
   } catch (err) {
+    console.error('[cambiar-password] Error:', err.message)
     res.status(500).json({ error: 'Error al cambiar la contraseña' })
   }
 })
