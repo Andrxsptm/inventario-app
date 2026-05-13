@@ -287,7 +287,7 @@ export default function Compras() {
       {showModal && <ModalNuevaOrden onClose={() => setShowModal(false)} onCreated={load} />}
 
       {/* Header */}
-      <div className="flex justify-between items-center pt-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2">
         <div>
           <h1 className="text-2xl font-black text-gray-800 flex items-center gap-3">
             <ShoppingBag className="text-purple-500" size={28} />
@@ -295,9 +295,11 @@ export default function Compras() {
           </h1>
           <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">Abastecimiento y logística de entrada</p>
         </div>
-        <Button onClick={() => setShowModal(true)} icon={Plus}>
-          Nueva Compra
-        </Button>
+        <div className="w-full sm:w-auto">
+          <Button onClick={() => setShowModal(true)} icon={Plus}>
+            Nueva Compra
+          </Button>
+        </div>
       </div>
 
       {error && (

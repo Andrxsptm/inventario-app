@@ -152,7 +152,7 @@ export default function Configuracion() {
     <div className="space-y-6 animate-in fade-in duration-500 pb-10 uppercase tracking-tighter">
       
       {/* Header Minimalista */}
-      <div className="flex justify-between items-center pt-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2">
         <div>
           <h1 className="text-2xl font-black text-gray-800 flex items-center gap-3">
              <div className="w-10 h-10 bg-white border border-gray-100 rounded-2xl flex items-center justify-center shadow-sm">
@@ -162,9 +162,11 @@ export default function Configuracion() {
           </h1>
           <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">Configuración central de Stocker</p>
         </div>
-        <Button onClick={handleBackup} icon={Database} disabled={isBackingUp || !esAdmin}>
-           {isBackingUp ? 'Generando...' : esAdmin ? 'Backup Maestro' : 'Sin acceso'}
-        </Button>
+        <div className="w-full sm:w-auto">
+          <Button onClick={handleBackup} icon={Database} disabled={isBackingUp || !esAdmin}>
+             {isBackingUp ? 'Generando...' : esAdmin ? 'Backup Maestro' : 'Sin acceso'}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

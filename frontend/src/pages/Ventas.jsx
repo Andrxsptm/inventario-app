@@ -284,7 +284,7 @@ export default function Ventas() {
       <ModalFactura venta={ventaFactura} onClose={() => setVentaFactura(null)} />
 
       {/* Header */}
-      <div className="flex justify-between items-center pt-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2">
         <div>
           <h1 className="text-2xl font-black text-gray-800 flex items-center gap-3"><ShoppingCart className="text-orange-500" size={28} />Flujo de Ventas</h1>
           <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">Control de transacciones y facturación</p>
@@ -320,7 +320,7 @@ export default function Ventas() {
               </p>
             )}
           </div>
-          <div className="flex gap-2 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
             <div className="relative flex-1 md:w-64 group">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-orange-500 transition-colors pointer-events-none"><Search size={16} /></div>
               <input type="text" value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Buscar por cédula o nombre..."

@@ -18,6 +18,9 @@ router.get('/', authenticate, async (req, res) => {
 
 router.post('/', authenticate, requireAdmin, async (req, res) => {
   const { nombre, precioCompra, precioVenta, stockActual, stockMinimo, proveedorId } = req.body
+  if (!nombre || !proveedorId || precioCompra <= 0 || precioVenta <= 0) {
+    return res.status(400).json({ error: 'Nombre, proveedor y precios (mayores a 0) son obligatorios' })
+  }
   try {
     const producto = await prisma.producto.create({
       data: { nombre, precioCompra, precioVenta, stockActual: stockActual ?? 0, stockMinimo: stockMinimo ?? 5, proveedorId },
@@ -29,6 +32,9 @@ router.post('/', authenticate, requireAdmin, async (req, res) => {
 router.put('/:id', authenticate, requireAdmin, async (req, res) => {
   const id = parseInt(req.params.id)
   const { nombre, precioCompra, precioVenta, stockMinimo, proveedorId } = req.body
+  if (!nombre || !proveedorId || precioCompra <= 0 || precioVenta <= 0) {
+    return res.status(400).json({ error: 'Nombre, proveedor y precios (mayores a 0) son obligatorios' })
+  }
   try {
     const producto = await prisma.producto.update({ where: { id }, data: { nombre, precioCompra, precioVenta, stockMinimo, proveedorId } })
     res.json(producto)
@@ -37,9 +43,28 @@ router.put('/:id', authenticate, requireAdmin, async (req, res) => {
 
 router.delete('/:id', authenticate, requireAdmin, async (req, res) => {
   try {
-    await prisma.producto.update({ where: { id: parseInt(req.params.id) }, data: { activo: false } })
-    res.json({ ok: true })
-  } catch { res.status(500).json({ error: 'Error al desactivar producto' }) }
+    const id = parseInt(req.params.id)
+    const producto = await prisma.producto.findUnique({ where: { id } })
+    if (!producto) return res.status(404).json({ error: 'Producto no encontrado' })
+
+    if (producto.stockActual > 0) {
+      return res.status(409).json({ error: `No se puede eliminar: tiene ${producto.stockActual} unidades en stock.` })
+    }
+
+    try {
+      await prisma.producto.delete({ where: { id } })
+      res.json({ ok: true, deleted: true })
+    } catch (e) {
+      if (e.code === 'P2003') {
+        // Tiene historial, desactivar en lugar de borrar
+        await prisma.producto.update({ where: { id }, data: { activo: false } })
+        return res.json({ ok: true, deactivated: true })
+      }
+      throw e
+    }
+  } catch (e) {
+    res.status(500).json({ error: 'Error al eliminar producto' })
+  }
 })
 
 export default router

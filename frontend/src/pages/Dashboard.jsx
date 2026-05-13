@@ -91,7 +91,7 @@ export default function Dashboard() {
     <div className="space-y-6 animate-in fade-in duration-500 pb-10 uppercase tracking-tighter">
       
       {/* Page Header */}
-      <div className="flex justify-between items-center pt-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2">
         <div>
           <h1 className="text-2xl font-black text-gray-800 flex items-center gap-3">
              <BarChart3 className="text-blue-500" size={28} />

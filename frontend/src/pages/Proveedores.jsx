@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Truck, Mail, Phone, Globe, X, MapPin, Notebook, Loader2, Pencil, Trash2, ToggleLeft, ToggleRight, CheckCircle2, Plus, CreditCard } from 'lucide-react'
+import { Truck, Phone, Globe, X, MapPin, Notebook, Loader2, Pencil, Trash2, ToggleLeft, ToggleRight, CheckCircle2, Plus, CreditCard, Search } from 'lucide-react'
 import api from '../services/api'
 import Button from '../components/common/Button'
 
@@ -13,6 +13,10 @@ function ModalProveedor({ initial, onClose, onSaved }) {
 
   async function handleSave() {
     if (!form.nombre.trim()) { setError('El nombre es obligatorio.'); return }
+    if (form.nit?.trim() && form.nit.replace(/\D/g, '').length !== 10) {
+      setError('El NIT debe tener 10 dígitos (9 + dígito verificación).'); return
+    }
+    if (!form.telefono?.trim()) { setError('El teléfono es obligatorio.'); return }
     setSaving(true); setError('')
     try {
       if (isEdit) {
@@ -22,8 +26,8 @@ function ModalProveedor({ initial, onClose, onSaved }) {
       }
       setSuccess(true)
       setTimeout(() => { onSaved(); onClose() }, 1200)
-    } catch {
-      setError('Error al guardar el proveedor.')
+    } catch (e) {
+      setError(e?.response?.data?.error || 'Error al guardar el proveedor.')
     } finally {
       setSaving(false)
     }
@@ -64,8 +68,8 @@ function ModalProveedor({ initial, onClose, onSaved }) {
             <div className="p-6 space-y-4">
               {[
                 { label: 'Nombre de la Empresa *', key: 'nombre', icon: Globe, type: 'text', placeholder: 'Distribuidora Central S.A.' },
-                { label: 'NIT',                    key: 'nit', icon: CreditCard,  type: 'text', placeholder: '800.000.000 - 9' },
-                { label: 'Teléfono',               key: 'telefono', icon: Phone, type: 'tel', placeholder: '+57...' },
+                { label: 'NIT',                    key: 'nit', icon: CreditCard,  type: 'text', placeholder: '900.123.456-1' },
+                { label: 'Teléfono *',             key: 'telefono', icon: Phone, type: 'tel', placeholder: '+57...' },
                 { label: 'Dirección',              key: 'direccion', icon: MapPin, type: 'text', placeholder: 'Calle 123 #45-67' },
                 { label: 'Notas',                  key: 'notas', icon: Notebook, type: 'text', placeholder: 'Observaciones...' },
               ].map(({ label, key, icon: Icon, type, placeholder }) => (
@@ -88,7 +92,7 @@ function ModalProveedor({ initial, onClose, onSaved }) {
                             let formatted = digits.slice(0, 3);
                             if (digits.length > 3) formatted += '.' + digits.slice(3, 6);
                             if (digits.length > 6) formatted += '.' + digits.slice(6, 9);
-                            if (digits.length > 9) formatted += ' - ' + digits.slice(9, 10);
+                            if (digits.length > 9) formatted += '-' + digits.slice(9, 10);
                             val = formatted;
                           } else {
                             val = '';
@@ -175,6 +179,8 @@ export default function Proveedores() {
   const [error,       setError]       = useState(null)
   const [modal,       setModal]       = useState(null)   // null | 'new' | {proveedor}
   const [confirmDel,  setConfirmDel]  = useState(null)   // proveedor a eliminar
+  const [delError,    setDelError]    = useState('')
+  const [search,      setSearch]      = useState('')
 
   function load() {
     setLoading(true)
@@ -197,8 +203,12 @@ export default function Proveedores() {
     try {
       await api.delete(`/proveedores/${p.id}`)
       setConfirmDel(null)
+      setDelError('')
       load()
-    } catch { alert('Error al eliminar el proveedor') }
+    } catch (e) {
+      const msg = e?.response?.data?.error || 'Error al eliminar proveedor'
+      setDelError(msg)
+    }
   }
 
   return (
@@ -216,17 +226,22 @@ export default function Proveedores() {
       {/* Confirm delete */}
       {confirmDel && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/25 backdrop-blur-sm" onClick={() => setConfirmDel(null)} />
+          <div className="absolute inset-0 bg-black/25 backdrop-blur-sm" onClick={() => { setConfirmDel(null); setDelError('') }} />
           <div className="relative bg-white rounded-2xl border border-gray-100 shadow-2xl w-full max-w-xs p-6 animate-in zoom-in-95 fade-in duration-200 text-center">
             <div className="w-12 h-12 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
               <Trash2 size={20} />
             </div>
             <h3 className="text-sm font-black text-gray-800 uppercase tracking-tighter">¿Eliminar proveedor?</h3>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 mb-5">
-              {confirmDel.nombre} quedará inactivo
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 mb-3">
+              Esta acción es permanente. Se eliminará {confirmDel.nombre} de la base de datos.
             </p>
+            {delError && (
+              <div className="bg-red-50 border border-red-100 text-red-600 text-[10px] font-bold uppercase tracking-wide px-3 py-2 rounded-xl mb-3 text-left">
+                {delError}
+              </div>
+            )}
             <div className="flex gap-2">
-              <button onClick={() => setConfirmDel(null)} className="flex-1 py-2.5 text-[11px] font-black uppercase tracking-widest text-gray-500 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors">
+              <button onClick={() => { setConfirmDel(null); setDelError('') }} className="flex-1 py-2.5 text-[11px] font-black uppercase tracking-widest text-gray-500 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors">
                 Cancelar
               </button>
               <button onClick={() => eliminar(confirmDel)} className="flex-1 py-2.5 text-[11px] font-black uppercase tracking-widest text-white bg-red-500 hover:bg-red-600 rounded-xl transition-all active:scale-[0.98]">
@@ -238,7 +253,7 @@ export default function Proveedores() {
       )}
 
       {/* Header */}
-      <div className="flex justify-between items-center pt-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2">
         <div>
           <h1 className="text-2xl font-black text-gray-800 flex items-center gap-3">
             <Truck className="text-amber-500" size={28} />
@@ -248,29 +263,54 @@ export default function Proveedores() {
             Directorio de abastecimiento logístico
           </p>
         </div>
-        <Button onClick={() => setModal('new')} icon={Plus}>
-          Nuevo Proveedor
-        </Button>
+        <div className="w-full sm:w-auto">
+          <Button onClick={() => setModal('new')} icon={Plus}>
+            Nuevo Proveedor
+          </Button>
+        </div>
+      </div>
+
+      {/* Search bar */}
+      <div className="flex items-center gap-3 bg-white px-4 py-2.5 rounded-2xl border border-gray-100 shadow-sm focus-within:border-amber-300 transition-all">
+        <Search size={18} className="text-gray-300 shrink-0" />
+        <input
+          type="text"
+          placeholder="Buscar por nombre o NIT..."
+          className="bg-transparent border-none outline-none text-sm w-full font-medium text-gray-700 placeholder-gray-300"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        {search && (
+          <button onClick={() => setSearch('')} className="text-gray-300 hover:text-gray-500 transition-colors shrink-0">
+            <X size={14} />
+          </button>
+        )}
       </div>
 
       {error && (
         <div className="bg-red-50 border border-red-100 text-red-600 text-xs font-bold px-4 py-3 rounded-xl">{error}</div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch" style={{ minHeight: 500 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch min-h-[500px]">
 
         {/* Main list */}
-        <div className="lg:col-span-3 overflow-y-auto pr-2 custom-scrollbar space-y-4" style={{ maxHeight: 'calc(100vh - 220px)' }}>
+        <div className="lg:col-span-3 overflow-y-auto pr-2 custom-scrollbar space-y-4 max-h-[60vh] lg:max-h-[calc(100vh-260px)]">
           {loading ? (
             Array(4).fill(0).map((_, i) => (
               <div key={i} className="animate-pulse bg-white h-24 rounded-2xl border border-gray-100" />
             ))
-          ) : proveedores.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-gray-300 text-sm font-bold uppercase py-16">
-              No hay proveedores registrados
-            </div>
-          ) : (
-            proveedores.map(p => (
+          ) : (() => {
+            const filtered = proveedores.filter(p => {
+              if (!search) return true
+              const q = search.toLowerCase()
+              return p.nombre.toLowerCase().includes(q) || (p.nit && p.nit.toLowerCase().includes(q))
+            })
+            if (filtered.length === 0) return (
+              <div className="flex items-center justify-center h-full text-gray-300 text-sm font-bold uppercase py-16">
+                {proveedores.length === 0 ? 'No hay proveedores registrados' : 'Sin resultados para "' + search + '"'}
+              </div>
+            )
+            return filtered.map(p => (
               <div
                 key={p.id}
                 className={`bg-white p-5 rounded-2xl border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:shadow-lg transition-all border-l-8 shrink-0 ${
@@ -330,7 +370,7 @@ export default function Proveedores() {
                 </div>
               </div>
             ))
-          )}
+          })()}
         </div>
 
         {/* Side panel */}
