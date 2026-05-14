@@ -12,7 +12,7 @@ import Configuracion from './pages/Configuracion'
 import { useAuthStore } from './store/authStore'
 
 // Protege rutas: si no autenticado, redirige al login
-function RequireAuth() {
+function RequiereAuth() {
   const isAuthenticated = useAuthStore(s => s.isAuthenticated)
   return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />
 }
@@ -23,7 +23,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
 
       {/* Rutas protegidas */}
-      <Route element={<RequireAuth />}>
+      <Route element={<RequiereAuth />}>
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard"     element={<Dashboard />} />

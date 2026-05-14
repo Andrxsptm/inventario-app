@@ -8,11 +8,11 @@ export const useAuthStore = create(
       user: null,
       isAuthenticated: false,
 
-      login: (token, user) => set({ token, user, isAuthenticated: true }),
+      iniciarSesion: (token, user) => set({ token, user, isAuthenticated: true }),
 
-      logout: () => set({ token: null, user: null, isAuthenticated: false }),
+      cerrarSesion: () => set({ token: null, user: null, isAuthenticated: false }),
 
-      isAdmin: () => {
+      esAdmin: () => {
         const state = useAuthStore.getState()
         return state.user?.rol === 'ADMINISTRADOR'
       },

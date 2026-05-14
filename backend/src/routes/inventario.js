@@ -1,11 +1,11 @@
 import { Router } from 'express'
 import { PrismaClient } from '@prisma/client'
-import { authenticate } from '../middleware/auth.js'
+import { autenticar } from '../middleware/auth.js'
 const router = Router()
 const prisma = new PrismaClient()
 
 // GET /api/inventario  — stock actual con clasificación de alertas
-router.get('/', authenticate, async (_, res) => {
+router.get('/', autenticar, async (_, res) => {
   const productos = await prisma.producto.findMany({
     where: { activo: true },
     include: { proveedor: { select: { nombre: true } } },

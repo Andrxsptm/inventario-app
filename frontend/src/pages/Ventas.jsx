@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { ShoppingCart, Clock, User, ArrowUpRight, DollarSign, Package, Users, Calendar, Loader2, Search, FileText, X, Download, Code, ChevronDown, CheckCheck } from 'lucide-react'
 import Button from '../components/common/Button'
 import api from '../services/api'
-import { getPdfBlobUrl, downloadPdf, getXmlText } from '../services/facturaService'
+import { obtenerUrlBlobPdf, descargarPdf, obtenerTextoXml } from '../services/facturaService'
 
 // ────────────────────────────────────────────
 //  Modal Factura (PDF Viewer)
@@ -18,7 +18,7 @@ function ModalFactura({ venta, onClose }) {
     if (!venta) return
     setLoading(true)
     setError(null)
-    getPdfBlobUrl(venta.id)
+    obtenerUrlBlobPdf(venta.id)
       .then(url => setPdfUrl(url))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
@@ -27,10 +27,10 @@ function ModalFactura({ venta, onClose }) {
 
   if (!venta) return null
 
-  const handleDownload = () => downloadPdf(venta.id, venta.numeroFactura)
-  const handleShowXml = async () => {
+  const manejarDescarga = () => descargarPdf(venta.id, venta.numeroFactura)
+  const manejarMostrarXml = async () => {
     if (!xmlText) {
-      try { setXmlText(await getXmlText(venta.id)) } catch (err) { setError(err.message); return }
+      try { setXmlText(await obtenerTextoXml(venta.id)) } catch (err) { setError(err.message); return }
     }
     setShowXml(!showXml)
   }
@@ -49,8 +49,8 @@ function ModalFactura({ venta, onClose }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={handleShowXml} className="py-2 px-3 text-[10px] font-black uppercase tracking-widest text-gray-600 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-1.5 transition-all"><Code size={14} />{showXml ? 'Ver PDF' : 'Ver XML'}</button>
-            <button onClick={handleDownload} className="py-2 px-3 text-[10px] font-black uppercase tracking-widest text-white bg-orange-500 hover:bg-orange-600 rounded-xl flex items-center gap-1.5 transition-all active:scale-[0.98]"><Download size={14} />Descargar PDF</button>
+            <button onClick={manejarMostrarXml} className="py-2 px-3 text-[10px] font-black uppercase tracking-widest text-gray-600 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-1.5 transition-all"><Code size={14} />{showXml ? 'Ver PDF' : 'Ver XML'}</button>
+            <button onClick={manejarDescarga} className="py-2 px-3 text-[10px] font-black uppercase tracking-widest text-white bg-orange-500 hover:bg-orange-600 rounded-xl flex items-center gap-1.5 transition-all active:scale-[0.98]"><Download size={14} />Descargar PDF</button>
             <button onClick={onClose} className="p-2 hover:bg-orange-100 text-orange-600 rounded-full transition-colors ml-1"><X size={18} /></button>
           </div>
         </div>
@@ -134,7 +134,7 @@ const PRESETS = [
   { key: 'todos',   label: 'Todos' },
 ]
 
-function calcRango(key) {
+function calcularRango(key) {
   const now = new Date()
   if (key === 'hoy') {
     const d = new Date(now); d.setHours(0, 0, 0, 0)
@@ -156,9 +156,9 @@ function FiltroFecha({ filtro, setFiltro, customDesde, setCustomDesde, customHas
   const ref = useRef(null)
 
   useEffect(() => {
-    function handleClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
+    function manejarClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', manejarClick)
+    return () => document.removeEventListener('mousedown', manejarClick)
   }, [])
 
   const label = PRESETS.find(p => p.key === filtro)?.label ?? 'Filtrar fecha'
@@ -263,14 +263,14 @@ export default function Ventas() {
       if (customHasta && fecha > new Date(customHasta + 'T23:59:59')) return false
       return true
     }
-    const { desde, hasta } = calcRango(filtro)
+    const { desde, hasta } = calcularRango(filtro)
     const fecha = new Date(v.fecha)
     if (desde && fecha < desde) return false
     if (hasta && fecha > hasta) return false
     return true
   })
 
-  const handleVerFactura = (venta) => { setVentaSeleccionada(null); setVentaFactura(venta) }
+  const manejarVerFactura = (venta) => { setVentaSeleccionada(null); setVentaFactura(venta) }
 
   // Etiqueta de período activo para el encabezado
   const periodoLabel = filtro === 'todos' ? null
@@ -280,7 +280,7 @@ export default function Ventas() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10 uppercase tracking-tighter">
 
-      <ModalDetalleVenta venta={ventaSeleccionada} onClose={() => setVentaSeleccionada(null)} onVerFactura={handleVerFactura} />
+      <ModalDetalleVenta venta={ventaSeleccionada} onClose={() => setVentaSeleccionada(null)} onVerFactura={manejarVerFactura} />
       <ModalFactura venta={ventaFactura} onClose={() => setVentaFactura(null)} />
 
       {/* Header */}

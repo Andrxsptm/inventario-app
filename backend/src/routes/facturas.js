@@ -1,11 +1,11 @@
 import { Router } from 'express'
-import { authenticate } from '../middleware/auth.js'
+import { autenticar } from '../middleware/auth.js'
 import { obtenerPdf, obtenerXml } from '../services/facturaService.js'
 
 const router = Router()
 
 // GET /api/ventas/:id/factura/pdf
-router.get('/:id/factura/pdf', authenticate, async (req, res) => {
+router.get('/:id/factura/pdf', autenticar, async (req, res) => {
   try {
     const ventaId = parseInt(req.params.id)
     const { pdfBuffer, venta } = await obtenerPdf(ventaId)
@@ -21,7 +21,7 @@ router.get('/:id/factura/pdf', authenticate, async (req, res) => {
 })
 
 // GET /api/ventas/:id/factura/xml
-router.get('/:id/factura/xml', authenticate, async (req, res) => {
+router.get('/:id/factura/xml', autenticar, async (req, res) => {
   try {
     const ventaId = parseInt(req.params.id)
     const xml = await obtenerXml(ventaId)

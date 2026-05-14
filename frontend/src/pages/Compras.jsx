@@ -22,11 +22,11 @@ function ModalNuevaOrden({ onClose, onCreated }) {
     api.get('/productos').then(r => setProductos(r.data)).catch(() => {})
   }, [])
 
-  function addItem() {
+  function agregarItem() {
     setItems(prev => [...prev, { productoId: '', cantidad: 1, precioUnit: 0 }])
   }
 
-  function updateItem(idx, field, val) {
+  function actualizarItem(idx, field, val) {
     setItems(prev => prev.map((it, i) => {
       if (i !== idx) return it
       const updated = { ...it, [field]: field === 'productoId' ? val : Number(val) }
@@ -38,13 +38,13 @@ function ModalNuevaOrden({ onClose, onCreated }) {
     }))
   }
 
-  function removeItem(idx) {
+  function eliminarItem(idx) {
     setItems(prev => prev.filter((_, i) => i !== idx))
   }
 
   const total = items.reduce((acc, i) => acc + i.cantidad * i.precioUnit, 0)
 
-  async function handleSubmit(e) {
+  async function manejarEnvio(e) {
     e.preventDefault()
     if (!proveedorId) { setError('Selecciona un proveedor.'); return }
     if (items.length === 0) { setError('Agrega al menos un producto.'); return }
@@ -95,7 +95,7 @@ function ModalNuevaOrden({ onClose, onCreated }) {
         ) : (
           <>
             {/* Body */}
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={manejarEnvio}>
               <div className="p-6 space-y-4 max-h-[424px] overflow-y-auto custom-scrollbar">
 
                 {/* Proveedor */}
@@ -151,7 +151,7 @@ function ModalNuevaOrden({ onClose, onCreated }) {
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Productos de la Orden</label>
                     <Button
                       type="button"
-                      onClick={addItem}
+                      onClick={agregarItem}
                       variant="amber"
                       icon={Plus}
                       className="!px-3 !py-1.5"
@@ -184,7 +184,7 @@ function ModalNuevaOrden({ onClose, onCreated }) {
                           <div className="relative flex-1 min-w-0 group/select">
                             <select
                               value={it.productoId}
-                              onChange={e => updateItem(idx, 'productoId', e.target.value)}
+                              onChange={e => actualizarItem(idx, 'productoId', e.target.value)}
                               className="w-full appearance-none cursor-pointer bg-white border-2 border-gray-100 focus:border-amber-400 rounded-xl px-3 py-2 pr-8 text-xs font-bold text-gray-700 outline-none transition-all shadow-sm hover:border-gray-200"
                             >
                               <option value="">Seleccionar producto</option>
@@ -196,17 +196,17 @@ function ModalNuevaOrden({ onClose, onCreated }) {
                           </div>
                           <input
                             type="number" min={1} value={it.cantidad}
-                            onChange={e => updateItem(idx, 'cantidad', e.target.value)}
+                            onChange={e => actualizarItem(idx, 'cantidad', e.target.value)}
                             placeholder="Cant."
                             className="w-16 text-center text-xs font-black text-gray-700 bg-white border-2 border-gray-100 focus:border-amber-400 rounded-xl py-2 outline-none transition-all shadow-sm hover:border-gray-200"
                           />
                           <input
                             type="number" min={0} step="0.01" value={it.precioUnit}
-                            onChange={e => updateItem(idx, 'precioUnit', e.target.value)}
+                            onChange={e => actualizarItem(idx, 'precioUnit', e.target.value)}
                             placeholder="Precio"
                             className="w-20 text-center text-xs font-black text-gray-700 bg-white border-2 border-gray-100 focus:border-amber-400 rounded-xl py-2 outline-none transition-all shadow-sm hover:border-gray-200"
                           />
-                          <button type="button" onClick={() => removeItem(idx)} className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all shrink-0">
+                          <button type="button" onClick={() => eliminarItem(idx)} className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all shrink-0">
                             <Trash2 size={14} />
                           </button>
                         </div>
@@ -255,23 +255,107 @@ function ModalNuevaOrden({ onClose, onCreated }) {
   )
 }
 
+function ModalDetalleOrden({ orden, onClose }) {
+  if (!orden) return null
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-modal-in">
+        <div className="p-6 bg-amber-50 border-b border-amber-100 flex justify-between items-start">
+          <div>
+            <h2 className="text-xl font-black text-gray-800 flex items-center gap-3">
+              <ShoppingBag className="text-amber-500" size={24} />
+              Orden de Compra OC-{String(orden.id).padStart(3, '0')}
+            </h2>
+            <div className="flex gap-4 mt-2">
+              <p className="text-xs text-gray-500 font-bold uppercase tracking-widest flex items-center gap-1">
+                <Truck size={14} className="text-amber-500"/> {orden.proveedor?.nombre ?? '—'}
+              </p>
+              <div className={`px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest ${
+                orden.estado === 'RECIBIDA'  ? 'bg-green-100 text-green-700'  :
+                orden.estado === 'CANCELADA' ? 'bg-red-100 text-red-700'     :
+                                           'bg-amber-100 text-amber-700'
+              }`}>
+                {orden.estado}
+              </div>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-amber-100 text-amber-600 rounded-full transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+              <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Fecha de Creación</p>
+              <p className="text-sm font-bold text-gray-800">{new Date(orden.fecha).toLocaleDateString('es')}</p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+              <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Fecha de Entrega</p>
+              <p className="text-sm font-bold text-gray-800">{orden.fechaEntrega ? new Date(orden.fechaEntrega).toLocaleDateString('es') : 'No especificada'}</p>
+            </div>
+          </div>
+
+          <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Productos de la Orden</h4>
+          {orden.items && orden.items.length > 0 ? (
+            <div className="space-y-2">
+              <div className="flex px-4 py-2 bg-gray-100 rounded-xl text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                <span className="flex-1">Producto</span>
+                <span className="w-20 text-center">Cant.</span>
+                <span className="w-24 text-right">Precio Unit.</span>
+                <span className="w-24 text-right">Subtotal</span>
+              </div>
+              {orden.items.map((it, idx) => (
+                <div key={idx} className="flex px-4 py-3 bg-white rounded-xl border border-gray-100 text-xs font-bold text-gray-600 items-center hover:border-gray-200 transition-colors">
+                  <span className="flex-1 truncate">{it.producto?.nombre || 'Producto Desconocido'}</span>
+                  <span className="w-20 text-center">{it.cantidad}</span>
+                  <span className="w-24 text-right text-gray-500">${Number(it.precioUnit).toLocaleString('es', { minimumFractionDigits: 2 })}</span>
+                  <span className="w-24 text-right font-black text-gray-800">${(it.cantidad * it.precioUnit).toLocaleString('es', { minimumFractionDigits: 2 })}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400 font-bold px-4 py-6 bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-center">No hay detalles disponibles para esta orden.</p>
+          )}
+
+          {orden.notas && (
+            <div className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-100">
+              <p className="text-[10px] text-amber-600 font-black uppercase tracking-widest mb-1 flex items-center gap-1"><Tag size={12}/> Notas</p>
+              <p className="text-sm text-gray-700 font-medium">{orden.notas}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-end">
+          <div className="text-right">
+            <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Inversión Total</p>
+            <p className="text-2xl font-black text-gray-900">${orden.total.toLocaleString('es', { minimumFractionDigits: 2 })}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Compras() {
-  const [compras,    setCompras]    = useState([])
-  const [loading,    setLoading]    = useState(true)
-  const [error,      setError]      = useState(null)
-  const [showModal,  setShowModal]  = useState(false)
+  const [compras,       setCompras]       = useState([])
+  const [loading,       setLoading]       = useState(true)
+  const [error,         setError]         = useState(null)
+  const [showModal,     setShowModal]     = useState(false)
+  const [selectedOrden, setSelectedOrden] = useState(null)
 
   async function marcarRecibida(id) {
     if (!window.confirm('¿Confirmas que recibiste esta orden? El stock de los productos se actualizará automáticamente.')) return
     try {
       await api.put(`/compras/${id}/recibir`)
-      load()
+      cargar()
     } catch (err) {
       alert(err.response?.data?.error || 'Error al recibir orden')
     }
   }
 
-  function load() {
+  function cargar() {
     setLoading(true)
     api.get('/compras')
       .then(r => setCompras(r.data))
@@ -279,18 +363,19 @@ export default function Compras() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { cargar() }, [])
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10 uppercase tracking-tighter">
 
-      {showModal && <ModalNuevaOrden onClose={() => setShowModal(false)} onCreated={load} />}
+      {showModal && <ModalNuevaOrden onClose={() => setShowModal(false)} onCreated={cargar} />}
+      {selectedOrden && <ModalDetalleOrden orden={selectedOrden} onClose={() => setSelectedOrden(null)} />}
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2">
         <div>
           <h1 className="text-2xl font-black text-gray-800 flex items-center gap-3">
-            <ShoppingBag className="text-purple-500" size={28} />
+            <ShoppingBag className="text-amber-500" size={28} />
             Órdenes de Compra
           </h1>
           <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">Abastecimiento y logística de entrada</p>
@@ -318,7 +403,7 @@ export default function Compras() {
           {compras.map(c => (
             <div key={c.id} className="bg-white p-6 rounded-3xl border border-gray-100 flex flex-col lg:flex-row items-start lg:items-center gap-6 hover:translate-x-2 transition-transform">
               <div className="flex items-center gap-5">
-                <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-indigo-500 border border-indigo-50">
+                <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-100">
                   <ShoppingBag size={32} />
                 </div>
                 <div>
@@ -334,7 +419,7 @@ export default function Compras() {
 
               <div className="flex-1 lg:px-6">
                 <div className="flex items-center gap-2 text-sm text-gray-600 font-bold mb-1">
-                  <Truck size={16} className="text-indigo-400" /> {c.proveedor?.nombre ?? '—'}
+                  <Truck size={16} className="text-amber-500" /> {c.proveedor?.nombre ?? '—'}
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-400">
                   <Tag size={14} /> {c.items?.length ?? 0} Productos en la orden
@@ -357,13 +442,16 @@ export default function Compras() {
                   {c.estado === 'PENDIENTE' && (
                     <button 
                       onClick={() => marcarRecibida(c.id)}
-                      className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors"
+                      className="text-[10px] font-black uppercase tracking-widest text-amber-600 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg transition-colors"
                     >
                       Marcar Recibida
                     </button>
                   )}
                 </div>
-                <button className="p-3 bg-gray-50 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-2xl transition-all">
+                <button 
+                  onClick={() => setSelectedOrden(c)}
+                  className="p-3 bg-gray-50 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-2xl transition-all"
+                >
                   <ChevronRight size={20} />
                 </button>
               </div>

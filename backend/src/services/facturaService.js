@@ -7,19 +7,19 @@ const prisma = new PrismaClient()
 //  Helpers
 // ──────────────────────────────────────────────
 
-function pad(n, len = 4) {
+function rellenar(n, len = 4) {
   return String(n).padStart(len, '0')
 }
 
-function fmtMoney(n) {
+function formatearDinero(n) {
   return n.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-function fmtDate(d) {
+function formatearFecha(d) {
   return new Date(d).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-function hexToRgb(hex) {
+function hexARgb(hex) {
   const r = parseInt(hex.slice(1, 3), 16)
   const g = parseInt(hex.slice(3, 5), 16)
   const b = parseInt(hex.slice(5, 7), 16)
@@ -29,7 +29,7 @@ function hexToRgb(hex) {
 // ──────────────────────────────────────────────
 //  Obtener configuración de empresa (singleton)
 // ──────────────────────────────────────────────
-async function getConfig() {
+async function obtenerConfig() {
   let config = await prisma.configuracionEmpresa.findUnique({ where: { id: 1 } })
   if (!config) {
     config = await prisma.configuracionEmpresa.create({ data: { id: 1 } })
@@ -49,7 +49,7 @@ export async function generarNumeroFactura(tx) {
   const siguiente = ultima
     ? parseInt(ultima.numeroFactura.replace('FAC-', ''), 10) + 1
     : 1
-  return `FAC-${pad(siguiente)}`
+  return `FAC-${rellenar(siguiente)}`
 }
 
 // ──────────────────────────────────────────────
@@ -169,7 +169,7 @@ export function generarPdf(venta, config) {
     doc.on('end', () => resolve(Buffer.concat(buffers)))
     doc.on('error', reject)
 
-    const accentColor = hexToRgb(config.colorPrimario || '#f97316')
+    const accentColor = hexARgb(config.colorPrimario || '#f97316')
     const pageW = doc.page.width - 100 // margins
 
     // ── HEADER ──────────────────────────────
@@ -210,7 +210,7 @@ export function generarPdf(venta, config) {
     // Fila de valores
     doc.rect(50, infoY + 20, pageW, 18).fill('#ffffff')
     doc.fontSize(8).font('Helvetica').fillColor('#333333')
-    doc.text(fmtDate(venta.fecha), col2 + 5, infoY + 25)
+    doc.text(formatearFecha(venta.fecha), col2 + 5, infoY + 25)
     doc.text(venta.numeroFactura, col4 + 5, infoY + 25)
 
     // Destinatario
@@ -250,8 +250,8 @@ export function generarPdf(venta, config) {
       doc.fontSize(8).font('Helvetica').fillColor('#333333')
       doc.text(String(item.cantidad), colCant + 10, rowY + 6, { width: 60 })
       doc.text(item.producto?.nombre || 'Producto', colDesc + 10, rowY + 6, { width: 240 })
-      doc.text(`$${fmtMoney(item.precioUnit)}`, colPrecio + 5, rowY + 6, { width: 80 })
-      doc.text(`$${fmtMoney(item.subtotal)}`, colTotal + 5, rowY + 6, { width: 80 })
+      doc.text(`$${formatearDinero(item.precioUnit)}`, colPrecio + 5, rowY + 6, { width: 80 })
+      doc.text(`$${formatearDinero(item.subtotal)}`, colTotal + 5, rowY + 6, { width: 80 })
       rowY += 22
     })
 
@@ -280,16 +280,16 @@ export function generarPdf(venta, config) {
 
     doc.fontSize(8).font('Helvetica').fillColor('#555555')
     doc.text('Subtotal', totalesX, totalesY, { width: 90, align: 'right' })
-    doc.text(`$${fmtMoney(venta.total)}`, totalesValX, totalesY, { width: 80 })
+    doc.text(`$${formatearDinero(venta.total)}`, totalesValX, totalesY, { width: 80 })
 
     doc.text('Impuesto (IVA costo)', totalesX, totalesY + 18, { width: 90, align: 'right' })
-    doc.text(`$${fmtMoney(ivaTotal)}`, totalesValX, totalesY + 18, { width: 80 })
+    doc.text(`$${formatearDinero(ivaTotal)}`, totalesValX, totalesY + 18, { width: 80 })
 
     // Total debido con fondo de acento
     doc.rect(totalesX - 5, totalesY + 38, pageW - totalesX + 55, 22).fill(accentColor)
     doc.fontSize(9).font('Helvetica-Bold').fillColor('#ffffff')
     doc.text('Total debido', totalesX, totalesY + 43, { width: 90, align: 'right' })
-    doc.text(`$${fmtMoney(venta.total)}`, totalesValX, totalesY + 43, { width: 80 })
+    doc.text(`$${formatearDinero(venta.total)}`, totalesValX, totalesY + 43, { width: 80 })
 
     // ── FOOTER ──────────────────────────────
     const footerY = doc.page.height - 80
@@ -320,7 +320,7 @@ export async function obtenerVentaParaFactura(ventaId) {
   })
   if (!venta) throw new Error('Venta no encontrada')
 
-  const config = await getConfig()
+  const config = await obtenerConfig()
 
   // Generar número de factura si no tiene
   if (!venta.numeroFactura) {

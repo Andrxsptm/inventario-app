@@ -11,12 +11,12 @@ import api from '../../services/api'
 /* ─────────────────────────────────────────────────────────────────── */
 /* Helpers                                                              */
 /* ─────────────────────────────────────────────────────────────────── */
-function avatarUrl(nombre = '') {
+function urlAvatar(nombre = '') {
   const initials = nombre.split(' ').slice(0, 2).map(w => w[0]).join('+')
   return `https://ui-avatars.com/api/?name=${initials}&background=6d28d9&color=fff&bold=true`
 }
 
-function timeAgo(date) {
+function tiempoAtras(date) {
   if (!date) return ''
   const diff = (Date.now() - new Date(date).getTime()) / 1000
   if (diff < 60) return 'Ahora'
@@ -41,7 +41,7 @@ function PanelAgregarVendedor({ onClose }) {
   const [error, setError]   = useState('')
   const [success, setSuccess] = useState(false)
 
-  async function handleSubmit(e) {
+  async function manejarEnvio(e) {
     e.preventDefault()
     if (!form.nombre || !form.email || !form.password) {
       setError('Todos los campos son obligatorios.')
@@ -88,7 +88,7 @@ function PanelAgregarVendedor({ onClose }) {
             <p className="text-xs font-black text-green-600 uppercase tracking-tighter">¡Usuario creado!</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-3.5">
+          <form onSubmit={manejarEnvio} className="space-y-3.5">
             {[
               { label: 'Nombre completo', key: 'nombre', type: 'text', placeholder: 'Ej. María García' },
               { label: 'Correo electrónico', key: 'email', type: 'email', placeholder: 'maria@empresa.com' },
@@ -162,7 +162,7 @@ function PanelCambiarPassword({ onClose }) {
   const [error, setError]   = useState('')
   const [success, setSuccess] = useState(false)
 
-  async function handleSubmit(e) {
+  async function manejarEnvioContrasena(e) {
     e.preventDefault()
     if (!form.passwordActual || !form.passwordNueva || !form.confirmar) {
       setError('Todos los campos son obligatorios.'); return
@@ -224,7 +224,7 @@ function PanelCambiarPassword({ onClose }) {
             <p className="text-xs font-black text-green-600 uppercase tracking-tighter">¡Contraseña actualizada!</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-3.5">
+          <form onSubmit={manejarEnvioContrasena} className="space-y-3.5">
             {fields.map(({ label, key, showKey }) => (
               <div key={key}>
                 <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">
@@ -328,7 +328,7 @@ function PanelConfirmarLogout({ onConfirm, onCancel }) {
 export default function Navbar() {
   const { pathname } = useLocation()
   const navigate     = useNavigate()
-  const { user, logout } = useAuthStore()
+  const { user, cerrarSesion } = useAuthStore()
 
   /* Dropdowns mutuamente exclusivos */
   const [openPanel, setOpenPanel] = useState(null) // 'notif' | 'user' | null
@@ -351,16 +351,16 @@ export default function Navbar() {
       .finally(() => setLoadingAlertas(false))
   }, [])
 
-  const togglePanel = (panel) =>
+  const alternarPanel = (panel) =>
     setOpenPanel(prev => prev === panel ? null : panel)
 
-  function handleLogout() {
+  function manejarCerrarSesion() {
     setShowLogoutConfirm(true)
     setOpenPanel(null)
   }
 
-  function confirmLogout() {
-    logout()
+  function confirmarCerrarSesion() {
+    cerrarSesion()
     navigate('/login')
   }
 
@@ -378,7 +378,7 @@ export default function Navbar() {
           <div className="relative">
             <button
               id="btn-notificaciones"
-              onClick={() => togglePanel('notif')}
+              onClick={() => alternarPanel('notif')}
               className={`relative p-2 rounded-xl transition-all duration-200 ${
                 openPanel === 'notif'
                   ? 'bg-violet-50 text-violet-600'
@@ -440,7 +440,7 @@ export default function Navbar() {
                                 <div className="flex items-center gap-1 mt-1">
                                   <Clock size={9} className="text-gray-300" />
                                   <span className="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">
-                                    {timeAgo(alerta.fecha)}
+                                    {tiempoAtras(alerta.fecha)}
                                   </span>
                                 </div>
                               </div>
@@ -469,11 +469,11 @@ export default function Navbar() {
           <div className="relative">
             <button
               id="btn-usuario"
-              onClick={() => togglePanel('user')}
+              onClick={() => alternarPanel('user')}
               className="flex items-center gap-2.5 group focus:outline-none bg-gray-50/50 pr-3 rounded-full hover:bg-violet-50 transition-all duration-200"
             >
               <div className="w-8 h-8 rounded-full border-2 border-white group-hover:border-violet-200 transition-all overflow-hidden shadow-sm shrink-0">
-                <img src={avatarUrl(user?.nombre)} alt="Avatar" className="w-full h-full object-cover" />
+                <img src={urlAvatar(user?.nombre)} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <div className="hidden md:block text-left">
                 <p className="text-[10px] font-black text-gray-800 leading-tight">
@@ -498,7 +498,7 @@ export default function Navbar() {
                   {/* User header */}
                   <div className="px-6 py-4 flex flex-col items-center text-center gap-2.5 border-b border-gray-50 mb-2">
                     <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-inner ring-4 ring-violet-50">
-                      <img src={avatarUrl(user?.nombre)} alt="Avatar" className="w-full h-full object-cover" />
+                      <img src={urlAvatar(user?.nombre)} alt="Avatar" className="w-full h-full object-cover" />
                     </div>
                     <div>
                       <div className="flex items-center justify-center gap-2">
@@ -553,7 +553,7 @@ export default function Navbar() {
                   <div className="mt-2 px-3 pt-2 border-t border-gray-50">
                     <button
                       id="btn-cerrar-sesion"
-                      onClick={handleLogout}
+                      onClick={manejarCerrarSesion}
                       className="w-full flex items-center justify-center gap-2 px-4 py-3 text-[11px] font-black text-red-500 hover:bg-red-50 rounded-2xl transition-all active:scale-[0.98]"
                     >
                       <LogOut size={15} />
@@ -573,7 +573,7 @@ export default function Navbar() {
       {showChangePass    && <PanelCambiarPassword  onClose={() => setShowChangePass(false)} />}
       {showLogoutConfirm && (
         <PanelConfirmarLogout
-          onConfirm={confirmLogout}
+          onConfirm={confirmarCerrarSesion}
           onCancel={() => setShowLogoutConfirm(false)}
         />
       )}

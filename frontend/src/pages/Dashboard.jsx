@@ -11,7 +11,7 @@ import { FaDollarSign } from 'react-icons/fa'
 import api from '../services/api'
 
 /* Componentes de diseño */
-function KpiCard({ icon: Icon, value, label, color }) {
+function TarjetaKpi({ icon: Icon, value, label, color }) {
   const styles = {
     green: { border: 'border-green-500', bg: 'bg-green-50', text: 'text-green-600' },
     red:   { border: 'border-red-500',   bg: 'bg-red-50',   text: 'text-red-600' },
@@ -33,7 +33,7 @@ function KpiCard({ icon: Icon, value, label, color }) {
   )
 }
 
-function Skeleton({ className = '' }) {
+function Esqueleto({ className = '' }) {
   return <div className={`animate-pulse bg-gray-100 rounded-xl ${className}`} />
 }
 
@@ -111,13 +111,13 @@ export default function Dashboard() {
       {/* KPIs Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {loading ? (
-          Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-24" />)
+          Array(4).fill(0).map((_, i) => <Esqueleto key={i} className="h-24" />)
         ) : (
           <>
-            <KpiCard icon={FaDollarSign} value={`$${ventasHoy.toLocaleString('es', { minimumFractionDigits: 2 })}`} label="Ventas de Hoy" color="green" />
-            <KpiCard icon={Wallet}       value={`${stockBajo}`}   label="Productos Bajo Stock" color="blue" />
-            <KpiCard icon={TrendingUp}   value={`${ultimosClientes.length}`} label="Clientes Recientes" color="green" />
-            <KpiCard icon={AlertTriangle} value={`${productosAgotarse.filter(p => p.stockActual === 0).length}`} label="Agotados" color="red" />
+            <TarjetaKpi icon={FaDollarSign} value={`$${ventasHoy.toLocaleString('es', { minimumFractionDigits: 2 })}`} label="Ventas de Hoy" color="green" />
+            <TarjetaKpi icon={Wallet}       value={`${stockBajo}`}   label="Productos Bajo Stock" color="blue" />
+            <TarjetaKpi icon={TrendingUp}   value={`${ultimosClientes.length}`} label="Clientes Recientes" color="green" />
+            <TarjetaKpi icon={AlertTriangle} value={`${productosAgotarse.filter(p => p.stockActual === 0).length}`} label="Agotados" color="red" />
           </>
         )}
       </div>
@@ -135,7 +135,7 @@ export default function Dashboard() {
             </div>
             <div className="h-64">
               {loading ? (
-                <Skeleton className="h-full" />
+                <Esqueleto className="h-full" />
               ) : salesChart.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={salesChart}>
@@ -159,7 +159,7 @@ export default function Dashboard() {
              <div className="card">
                 <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Top Productos Vendidos</h2>
                 {loading ? (
-                  <div className="space-y-4">{Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-8" />)}</div>
+                  <div className="space-y-4">{Array(3).fill(0).map((_, i) => <Esqueleto key={i} className="h-8" />)}</div>
                 ) : topProductos.length > 0 ? (
                   <div className="space-y-4 max-h-[160px] overflow-y-auto custom-scrollbar pr-2">
                     {topProductos.map((p, i) => (
@@ -182,7 +182,7 @@ export default function Dashboard() {
              <div className="card">
                 <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Productos en stock crítico</h2>
                 {loading ? (
-                  <div className="space-y-4">{Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
+                  <div className="space-y-4">{Array(3).fill(0).map((_, i) => <Esqueleto key={i} className="h-10" />)}</div>
                 ) : productosAgotarse.length > 0 ? (
                   <div className="space-y-4 max-h-[160px] overflow-y-auto custom-scrollbar pr-2">
                     {productosAgotarse.map((p, i) => (
@@ -210,7 +210,7 @@ export default function Dashboard() {
             <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Últimos Clientes</h2>
             <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1">
               {loading ? (
-                Array(2).fill(0).map((_, i) => <Skeleton key={i} className="h-10" />)
+                Array(2).fill(0).map((_, i) => <Esqueleto key={i} className="h-10" />)
               ) : ultimosClientes.length > 0 ? (
                 ultimosClientes.map(c => (
                   <div key={c.id} className="flex items-center gap-3 p-2 rounded-xl group hover:bg-gray-50 transition-colors">
@@ -240,7 +240,7 @@ export default function Dashboard() {
              </div>
              <div className="flex-1 max-h-[300px] overflow-y-auto custom-scrollbar pr-1 space-y-3">
                {loading ? (
-                 Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-16" />)
+                 Array(3).fill(0).map((_, i) => <Esqueleto key={i} className="h-16" />)
                ) : productosAgotarse.length > 0 ? (
                 productosAgotarse.map((p, i) => {
                   const agotado = p.stockActual === 0

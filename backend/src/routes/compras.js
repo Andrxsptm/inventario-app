@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import { PrismaClient } from '@prisma/client'
-import { authenticate, requireAdmin } from '../middleware/auth.js'
+import { autenticar, requerirAdmin } from '../middleware/auth.js'
 const router = Router()
 const prisma = new PrismaClient()
 
-router.get('/', authenticate, async (_, res) => {
+router.get('/', autenticar, async (_, res) => {
   const data = await prisma.ordenCompra.findMany({
     include: { proveedor: true, items: { include: { producto: true } } },
     orderBy: { fecha: 'desc' },
@@ -12,7 +12,7 @@ router.get('/', authenticate, async (_, res) => {
   res.json(data)
 })
 
-router.post('/', authenticate, requireAdmin, async (req, res) => {
+router.post('/', autenticar, requerirAdmin, async (req, res) => {
   try {
     const { proveedorId, items, notas, fechaEntrega } = req.body
     let total = items.reduce((acc, i) => acc + Number(i.cantidad) * Number(i.precioUnit), 0)
@@ -40,7 +40,7 @@ router.post('/', authenticate, requireAdmin, async (req, res) => {
 })
 
 // Marcar como recibida → actualiza stock
-router.put('/:id/recibir', authenticate, requireAdmin, async (req, res) => {
+router.put('/:id/recibir', autenticar, requerirAdmin, async (req, res) => {
   const id = parseInt(req.params.id)
   try {
     await prisma.$transaction(async (tx) => {
@@ -54,7 +54,7 @@ router.put('/:id/recibir', authenticate, requireAdmin, async (req, res) => {
   } catch (err) { res.status(400).json({ error: err.message }) }
 })
 
-router.put('/:id/cancelar', authenticate, requireAdmin, async (req, res) => {
+router.put('/:id/cancelar', autenticar, requerirAdmin, async (req, res) => {
   await prisma.ordenCompra.update({ where: { id: parseInt(req.params.id) }, data: { estado: 'CANCELADA' } })
   res.json({ ok: true })
 })

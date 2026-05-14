@@ -1,12 +1,12 @@
 import { Router } from 'express'
 import { PrismaClient } from '@prisma/client'
-import { authenticate, requireAdmin } from '../middleware/auth.js'
+import { autenticar, requerirAdmin } from '../middleware/auth.js'
 import { generarNumeroFactura } from '../services/facturaService.js'
 const router = Router()
 const prisma = new PrismaClient()
 
 // GET /api/ventas
-router.get('/', authenticate, async (req, res) => {
+router.get('/', autenticar, async (req, res) => {
   try {
     const esAdmin = req.user.rol === 'ADMINISTRADOR'
     const filtro = esAdmin ? {} : { usuarioId: parseInt(req.user.id) }
@@ -23,7 +23,7 @@ router.get('/', authenticate, async (req, res) => {
 })
 
 // POST /api/ventas  — crea venta y descuenta stock
-router.post('/', authenticate, async (req, res) => {
+router.post('/', autenticar, async (req, res) => {
   const { clienteId, items, notas } = req.body
   // items: [{ productoId, cantidad, precioUnit }]
   try {
@@ -54,7 +54,7 @@ router.post('/', authenticate, async (req, res) => {
 })
 
 // PUT /api/ventas/:id/anular  — solo admin
-router.put('/:id/anular', authenticate, requireAdmin, async (req, res) => {
+router.put('/:id/anular', autenticar, requerirAdmin, async (req, res) => {
   const id = parseInt(req.params.id)
   try {
     await prisma.$transaction(async (tx) => {

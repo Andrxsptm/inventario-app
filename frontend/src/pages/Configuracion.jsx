@@ -34,11 +34,11 @@ export default function Configuracion() {
       .finally(() => setEmpresaLoading(false))
   }, [])
 
-  const handleEmpresaChange = (field, value) => {
+  const manejarCambioEmpresa = (field, value) => {
     setEmpresa(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleEmpresaSave = async () => {
+  const manejarGuardadoEmpresa = async () => {
     setEmpresaSaving(true)
     setEmpresaMsg(null)
     try {
@@ -54,7 +54,7 @@ export default function Configuracion() {
   }
 
   // Simulación de Backup SQL real
-  const handleBackup = async () => {
+  const manejarRespaldo = async () => {
     if (!esAdmin) return
     setIsBackingUp(true)
     try {
@@ -113,7 +113,7 @@ export default function Configuracion() {
           desc: esAdmin ? 'Descarga un respaldo SQL real de la base de datos' : 'Solo el administrador puede hacer respaldos', 
           action: esAdmin ? (
             <button 
-              onClick={handleBackup}
+              onClick={manejarRespaldo}
               disabled={isBackingUp}
               className="flex items-center gap-2 text-amber-600 font-black text-[10px] uppercase tracking-tighter hover:bg-amber-50 px-3 py-1.5 rounded-xl transition-colors disabled:opacity-50"
             >
@@ -163,7 +163,7 @@ export default function Configuracion() {
           <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">Configuración central de Stocker</p>
         </div>
         <div className="w-full sm:w-auto">
-          <Button onClick={handleBackup} icon={Database} disabled={isBackingUp || !esAdmin}>
+          <Button onClick={manejarRespaldo} icon={Database} disabled={isBackingUp || !esAdmin}>
              {isBackingUp ? 'Generando...' : esAdmin ? 'Backup Maestro' : 'Sin acceso'}
           </Button>
         </div>
@@ -199,7 +199,7 @@ export default function Configuracion() {
                         <input
                           type="text"
                           value={empresa[campo.key] || ''}
-                          onChange={e => handleEmpresaChange(campo.key, e.target.value)}
+                          onChange={e => manejarCambioEmpresa(campo.key, e.target.value)}
                           placeholder={campo.placeholder}
                           className="w-full bg-white border-2 border-gray-100 focus:border-orange-400 rounded-xl py-2.5 px-4 text-xs font-bold text-gray-700 outline-none transition-all normal-case tracking-normal"
                         />
@@ -272,7 +272,7 @@ export default function Configuracion() {
                         <input
                           type="color"
                           value={empresa.colorPrimario || '#f97316'}
-                          onChange={e => handleEmpresaChange('colorPrimario', e.target.value)}
+                          onChange={e => manejarCambioEmpresa('colorPrimario', e.target.value)}
                           className="w-12 h-10 rounded-xl border-2 border-gray-100 cursor-pointer"
                         />
                         <span className="text-xs font-bold text-gray-500 normal-case tracking-normal">{empresa.colorPrimario}</span>
@@ -285,7 +285,7 @@ export default function Configuracion() {
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5 block">Texto del pie de página</label>
                       <textarea
                         value={empresa.piePagina || ''}
-                        onChange={e => handleEmpresaChange('piePagina', e.target.value)}
+                        onChange={e => manejarCambioEmpresa('piePagina', e.target.value)}
                         rows={2}
                         className="w-full bg-white border-2 border-gray-100 focus:border-violet-400 rounded-xl py-2.5 px-4 text-xs font-bold text-gray-700 outline-none transition-all resize-none normal-case tracking-normal"
                         placeholder="¡Gracias por su confianza!"
@@ -299,7 +299,7 @@ export default function Configuracion() {
                         <p className="text-[10px] text-gray-400 font-bold lowercase italic">incluir logo de empresa en la factura</p>
                       </div>
                       <button 
-                        onClick={() => handleEmpresaChange('mostrarLogo', !empresa.mostrarLogo)}
+                        onClick={() => manejarCambioEmpresa('mostrarLogo', !empresa.mostrarLogo)}
                         className={`w-14 h-7 rounded-full transition-all relative border-2 ${empresa.mostrarLogo ? 'bg-violet-500 border-violet-600' : 'bg-gray-100 border-gray-200'}`}
                       >
                         <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${empresa.mostrarLogo ? 'right-1' : 'left-1'}`} />
@@ -308,7 +308,7 @@ export default function Configuracion() {
 
                     {/* Botón guardar */}
                     <button
-                      onClick={handleEmpresaSave}
+                      onClick={manejarGuardadoEmpresa}
                       disabled={empresaSaving}
                       className="w-full py-3 text-xs font-black uppercase tracking-widest text-white bg-orange-500 hover:bg-orange-600 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
                     >

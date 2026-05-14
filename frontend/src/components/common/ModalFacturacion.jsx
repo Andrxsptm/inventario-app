@@ -13,9 +13,9 @@ function ProductoSearch({ onAdd, itemsActuales, productos }) {
 
   // cerrar al click fuera
   useEffect(() => {
-    function handler(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    function manejador(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', manejador)
+    return () => document.removeEventListener('mousedown', manejador)
   }, [])
 
   const idsEnUso = itemsActuales.map(i => i.producto.id)
@@ -26,7 +26,7 @@ function ProductoSearch({ onAdd, itemsActuales, productos }) {
       ).slice(0, 7)
     : []
 
-  function select(p) { onAdd(p); setQuery(''); setOpen(false) }
+  function seleccionar(p) { onAdd(p); setQuery(''); setOpen(false) }
 
   return (
     <div ref={ref} className="relative">
@@ -64,7 +64,7 @@ function ProductoSearch({ onAdd, itemsActuales, productos }) {
               <button
                 key={p.id}
                 type="button"
-                onMouseDown={() => select(p)}
+                onMouseDown={() => seleccionar(p)}
                 disabled={p.stockActual === 0}
                 className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-amber-50 transition-colors text-left disabled:opacity-40 disabled:cursor-not-allowed group"
               >
@@ -122,13 +122,13 @@ export default function ModalFacturacion({ onClose }) {
 
   /* cerrar dropdown cliente al click fuera */
   useEffect(() => {
-    function handler(e) { if (clienteRef.current && !clienteRef.current.contains(e.target)) setShowSuggestions(false) }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    function manejador(e) { if (clienteRef.current && !clienteRef.current.contains(e.target)) setShowSuggestions(false) }
+    document.addEventListener('mousedown', manejador)
+    return () => document.removeEventListener('mousedown', manejador)
   }, [])
 
   /* ── Filtrar clientes mientras se escribe ── */
-  function handleIdChange(val) {
+  function manejarCambioId(val) {
     setIdQuery(val)
     setClienteSel(null)
     setModoNuevo(false)
@@ -175,7 +175,7 @@ export default function ModalFacturacion({ onClose }) {
   }
 
   /* ── Items ── */
-  function addItem(producto) {
+  function agregarItem(producto) {
     setItems(prev => {
       const exists = prev.find(i => i.producto.id === producto.id)
       if (exists) return prev.map(i => i.producto.id === producto.id ? { ...i, cantidad: i.cantidad + 1 } : i)
@@ -183,20 +183,20 @@ export default function ModalFacturacion({ onClose }) {
     })
   }
 
-  function updateCantidad(id, val) {
+  function actualizarCantidad(id, val) {
     const n = parseInt(val)
     if (isNaN(n) || n < 1) return
     setItems(prev => prev.map(i => i.producto.id === id ? { ...i, cantidad: n } : i))
   }
 
-  function removeItem(id) {
+  function eliminarItem(id) {
     setItems(prev => prev.filter(i => i.producto.id !== id))
   }
 
   const total = items.reduce((acc, i) => acc + i.producto.precioVenta * i.cantidad, 0)
 
   /* ── Submit ── */
-  async function handleSubmit(e) {
+  async function manejarEnvio(e) {
     e.preventDefault()
     if (items.length === 0) { setError('Agrega al menos un producto.'); return }
     for (const it of items) {
@@ -264,7 +264,7 @@ export default function ModalFacturacion({ onClose }) {
             <p className="text-xs font-black text-green-600 uppercase tracking-tighter">¡Venta registrada exitosamente!</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <form onSubmit={manejarEnvio} className="flex flex-col flex-1 overflow-hidden">
             <div className="overflow-y-auto custom-scrollbar flex-1 p-6 space-y-5">
 
               {/* ── CLIENTE ── */}
@@ -300,7 +300,7 @@ export default function ModalFacturacion({ onClose }) {
                       <input
                         type="text"
                         value={idQuery}
-                        onChange={e => handleIdChange(e.target.value)}
+                        onChange={e => manejarCambioId(e.target.value)}
                         onFocus={() => idQuery && setShowSuggestions(true)}
                         placeholder="Escribe la identificación o nombre del cliente..."
                         className={inputCls}
@@ -418,7 +418,7 @@ export default function ModalFacturacion({ onClose }) {
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                   Agregar Producto
                 </label>
-                <ProductoSearch onAdd={addItem} itemsActuales={items} productos={productos} />
+                <ProductoSearch onAdd={agregarItem} itemsActuales={items} productos={productos} />
               </div>
 
               {/* ── LISTA DE ITEMS ── */}
@@ -444,14 +444,14 @@ export default function ModalFacturacion({ onClose }) {
                             min={1}
                             max={i.producto.stockActual}
                             value={i.cantidad}
-                            onChange={e => updateCantidad(i.producto.id, e.target.value)}
+                            onChange={e => actualizarCantidad(i.producto.id, e.target.value)}
                             className="w-14 text-center text-xs font-black text-gray-800 bg-white border-2 border-gray-100 rounded-xl py-1 focus:outline-none focus:border-amber-400 transition-all"
                           />
                         </div>
                         <p className="text-xs font-black text-green-600 w-16 text-right shrink-0">
                           ${(i.producto.precioVenta * i.cantidad).toFixed(2)}
                         </p>
-                        <button type="button" onClick={() => removeItem(i.producto.id)} className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
+                        <button type="button" onClick={() => eliminarItem(i.producto.id)} className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
                           <Trash2 size={13} />
                         </button>
                       </div>

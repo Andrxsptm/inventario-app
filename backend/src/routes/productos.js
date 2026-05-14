@@ -1,11 +1,11 @@
 import { Router } from 'express'
 import { PrismaClient } from '@prisma/client'
-import { authenticate, requireAdmin } from '../middleware/auth.js'
+import { autenticar, requerirAdmin } from '../middleware/auth.js'
 
 const router = Router()
 const prisma = new PrismaClient()
 
-router.get('/', authenticate, async (req, res) => {
+router.get('/', autenticar, async (req, res) => {
   try {
     const productos = await prisma.producto.findMany({
       where: { activo: true },
@@ -16,7 +16,7 @@ router.get('/', authenticate, async (req, res) => {
   } catch { res.status(500).json({ error: 'Error al obtener productos' }) }
 })
 
-router.post('/', authenticate, requireAdmin, async (req, res) => {
+router.post('/', autenticar, requerirAdmin, async (req, res) => {
   const { nombre, precioCompra, precioVenta, stockActual, stockMinimo, proveedorId } = req.body
   if (!nombre || !proveedorId || precioCompra <= 0 || precioVenta <= 0) {
     return res.status(400).json({ error: 'Nombre, proveedor y precios (mayores a 0) son obligatorios' })
@@ -29,7 +29,7 @@ router.post('/', authenticate, requireAdmin, async (req, res) => {
   } catch { res.status(500).json({ error: 'Error al crear producto' }) }
 })
 
-router.put('/:id', authenticate, requireAdmin, async (req, res) => {
+router.put('/:id', autenticar, requerirAdmin, async (req, res) => {
   const id = parseInt(req.params.id)
   const { nombre, precioCompra, precioVenta, stockMinimo, proveedorId } = req.body
   if (!nombre || !proveedorId || precioCompra <= 0 || precioVenta <= 0) {
@@ -41,7 +41,7 @@ router.put('/:id', authenticate, requireAdmin, async (req, res) => {
   } catch { res.status(500).json({ error: 'Error al actualizar producto' }) }
 })
 
-router.delete('/:id', authenticate, requireAdmin, async (req, res) => {
+router.delete('/:id', autenticar, requerirAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id)
     const producto = await prisma.producto.findUnique({ where: { id } })

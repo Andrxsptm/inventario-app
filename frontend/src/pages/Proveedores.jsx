@@ -11,7 +11,7 @@ function ModalProveedor({ initial, onClose, onSaved }) {
   const [error,  setError]  = useState('')
   const [success, setSuccess] = useState(false)
 
-  async function handleSave() {
+  async function manejarGuardado() {
     if (!form.nombre.trim()) { setError('El nombre es obligatorio.'); return }
     if (form.nit?.trim() && form.nit.replace(/\D/g, '').length !== 10) {
       setError('El NIT debe tener 10 dígitos (9 + dígito verificación).'); return
@@ -121,7 +121,7 @@ function ModalProveedor({ initial, onClose, onSaved }) {
                 Cancelar
               </button>
               <button
-                onClick={handleSave}
+                onClick={manejarGuardado}
                 disabled={saving}
                 className="flex-[2] py-2.5 text-xs font-black uppercase tracking-widest text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-60 rounded-2xl flex items-center justify-center gap-2 transition-all"
               >
@@ -137,7 +137,7 @@ function ModalProveedor({ initial, onClose, onSaved }) {
 }
 
 /* ─── Panel lateral activos ─── */
-function PanelActivos({ proveedores }) {
+function PanelProveedoresActivos({ proveedores }) {
   const activos = proveedores.filter(p => p.activo)
   return (
     <div className="card h-full flex flex-col space-y-4">
@@ -182,7 +182,7 @@ export default function Proveedores() {
   const [delError,    setDelError]    = useState('')
   const [search,      setSearch]      = useState('')
 
-  function load() {
+  function cargar() {
     setLoading(true)
     api.get('/proveedores')
       .then(r => setProveedores(r.data))
@@ -190,12 +190,12 @@ export default function Proveedores() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { cargar() }, [])
 
-  async function toggleActivo(p) {
+  async function alternarActivo(p) {
     try {
       await api.put(`/proveedores/${p.id}/toggle-activo`)
-      load()
+      cargar()
     } catch { alert('Error al cambiar estado') }
   }
 
@@ -204,7 +204,7 @@ export default function Proveedores() {
       await api.delete(`/proveedores/${p.id}`)
       setConfirmDel(null)
       setDelError('')
-      load()
+      cargar()
     } catch (e) {
       const msg = e?.response?.data?.error || 'Error al eliminar proveedor'
       setDelError(msg)
@@ -219,7 +219,7 @@ export default function Proveedores() {
         <ModalProveedor
           initial={modal === 'new' ? null : modal}
           onClose={() => setModal(null)}
-          onSaved={load}
+          onSaved={cargar}
         />
       )}
 
@@ -345,7 +345,7 @@ export default function Proveedores() {
 
                   {/* Toggle activo */}
                   <button
-                    onClick={() => toggleActivo(p)}
+                    onClick={() => alternarActivo(p)}
                     title={p.activo ? 'Desactivar' : 'Activar'}
                     className="p-2.5 rounded-xl text-gray-400 hover:bg-amber-50 hover:text-amber-600 transition-all"
                   >
@@ -375,7 +375,7 @@ export default function Proveedores() {
 
         {/* Side panel */}
         <div className="lg:col-span-1">
-          <PanelActivos proveedores={proveedores} />
+          <PanelProveedoresActivos proveedores={proveedores} />
         </div>
       </div>
     </div>

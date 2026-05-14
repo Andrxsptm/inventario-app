@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 
-export function authenticate(req, res, next) {
+export function autenticar(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1]
   if (!token) return res.status(401).json({ error: 'Token requerido' })
   try {
@@ -11,7 +11,7 @@ export function authenticate(req, res, next) {
   }
 }
 
-export function requireAdmin(req, res, next) {
+export function requerirAdmin(req, res, next) {
   if (req.user?.rol !== 'ADMINISTRADOR')
     return res.status(403).json({ error: 'Solo administradores pueden realizar esta acción' })
   next()

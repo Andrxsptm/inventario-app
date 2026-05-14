@@ -11,9 +11,9 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-  const login = useAuthStore((s) => s.login)
+  const iniciarSesion = useAuthStore((s) => s.iniciarSesion)
 
-  async function handleSubmit(e) {
+  async function manejarEnvio(e) {
     e.preventDefault()
     if (!form.email || !form.password) {
       setError('Por favor completa todos los campos.')
@@ -23,7 +23,7 @@ export default function Login() {
     setError('')
     try {
       const { data } = await api.post('/auth/login', form)
-      login(data.token, data.user)
+      iniciarSesion(data.token, data.user)
       navigate('/dashboard')
     } catch (err) {
       setError(err.response?.data?.error || 'Credenciales incorrectas. Intenta de nuevo.')
@@ -68,7 +68,7 @@ export default function Login() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={manejarEnvio} className="space-y-4">
             {/* Email */}
             <div>
               <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5">

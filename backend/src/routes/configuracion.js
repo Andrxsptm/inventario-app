@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { PrismaClient } from '@prisma/client'
-import { authenticate, requireAdmin } from '../middleware/auth.js'
+import { autenticar, requerirAdmin } from '../middleware/auth.js'
 import { exec } from 'child_process'
 import { promisify } from 'util'
 
@@ -9,7 +9,7 @@ const router = Router()
 const prisma = new PrismaClient()
 
 // GET /api/configuracion/empresa
-router.get('/empresa', authenticate, async (_, res) => {
+router.get('/empresa', autenticar, async (_, res) => {
   try {
     let config = await prisma.configuracionEmpresa.findUnique({ where: { id: 1 } })
     if (!config) {
@@ -22,7 +22,7 @@ router.get('/empresa', authenticate, async (_, res) => {
 })
 
 // PUT /api/configuracion/empresa
-router.put('/empresa', authenticate, async (req, res) => {
+router.put('/empresa', autenticar, async (req, res) => {
   try {
     const { nombre, nit, direccion, telefono, correo, web, colorPrimario, piePagina, mostrarLogo } = req.body
     const config = await prisma.configuracionEmpresa.upsert({
@@ -39,7 +39,7 @@ router.put('/empresa', authenticate, async (req, res) => {
 // POST /api/configuracion/backup-sql — Solo ADMINISTRADOR
 // Usa pg_dump con la URL directa de la BD para generar un respaldo SQL real.
 // Si pg_dump no está disponible, exporta los datos en formato JSON estructurado.
-router.post('/backup-sql', authenticate, requireAdmin, async (req, res) => {
+router.post('/backup-sql', autenticar, requerirAdmin, async (req, res) => {
   const directUrl = process.env.DIRECT_URL || process.env.DATABASE_URL
   if (!directUrl) return res.status(500).json({ error: 'No se encontró la URL de conexión a la base de datos' })
 

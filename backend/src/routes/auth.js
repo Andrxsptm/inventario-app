@@ -2,7 +2,7 @@ import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
-import { authenticate, requireAdmin } from '../middleware/auth.js'
+import { autenticar, requerirAdmin } from '../middleware/auth.js'
 
 const router = Router()
 const prisma = new PrismaClient()
@@ -34,7 +34,7 @@ router.post('/login', async (req, res) => {
 })
 
 // POST /api/auth/register  — Solo ADMINISTRADOR puede crear usuarios
-router.post('/register', authenticate, requireAdmin, async (req, res) => {
+router.post('/register', autenticar, requerirAdmin, async (req, res) => {
   const { email, password, nombre, rol } = req.body
   if (!email || !password || !nombre)
     return res.status(400).json({ error: 'Email, contraseña y nombre son requeridos' })
@@ -61,7 +61,7 @@ router.post('/register', authenticate, requireAdmin, async (req, res) => {
 })
 
 // PUT /api/auth/cambiar-password  — Usuario autenticado cambia su propia contraseña
-router.put('/cambiar-password', authenticate, async (req, res) => {
+router.put('/cambiar-password', autenticar, async (req, res) => {
   const { passwordActual, passwordNueva } = req.body
   if (!passwordActual || !passwordNueva)
     return res.status(400).json({ error: 'Contraseña actual y nueva son requeridas' })
@@ -94,7 +94,7 @@ router.put('/cambiar-password', authenticate, async (req, res) => {
 })
 
 // GET /api/auth/alertas  — Notificaciones basadas en stock bajo y órdenes pendientes
-router.get('/alertas', authenticate, async (req, res) => {
+router.get('/alertas', autenticar, async (req, res) => {
   try {
     const [todosProductos, ordenesPendientes] = await Promise.all([
       prisma.producto.findMany({ where: { activo: true }, orderBy: { stockActual: 'asc' } }),

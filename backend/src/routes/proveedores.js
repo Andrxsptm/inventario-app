@@ -1,34 +1,34 @@
 import { Router } from 'express'
 import { PrismaClient } from '@prisma/client'
-import { authenticate, requireAdmin } from '../middleware/auth.js'
+import { autenticar, requerirAdmin } from '../middleware/auth.js'
 const router = Router()
 const prisma = new PrismaClient()
 
-router.get('/', authenticate, async (_, res) => {
+router.get('/', autenticar, async (_, res) => {
   const data = await prisma.proveedor.findMany({ orderBy: { nombre: 'asc' } })
   res.json(data)
 })
-router.post('/', authenticate, requireAdmin, async (req, res) => {
+router.post('/', autenticar, requerirAdmin, async (req, res) => {
   const { nombre, telefono, nit, direccion, notas } = req.body
   if (!nombre || !telefono) return res.status(400).json({ error: 'Nombre y teléfono son obligatorios' })
   if (nit && nit.replace(/\D/g, '').length !== 10) return res.status(400).json({ error: 'El NIT debe tener exactamente 10 dígitos (9 + DV)' })
   const data = await prisma.proveedor.create({ data: { nombre, telefono, nit, direccion, notas } })
   res.status(201).json(data)
 })
-router.put('/:id', authenticate, requireAdmin, async (req, res) => {
+router.put('/:id', autenticar, requerirAdmin, async (req, res) => {
   const { nombre, telefono, nit, direccion, notas } = req.body
   if (!nombre || !telefono) return res.status(400).json({ error: 'Nombre y teléfono son obligatorios' })
   if (nit && nit.replace(/\D/g, '').length !== 10) return res.status(400).json({ error: 'El NIT debe tener exactamente 10 dígitos (9 + DV)' })
   const data = await prisma.proveedor.update({ where: { id: parseInt(req.params.id) }, data: { nombre, telefono, nit, direccion, notas } })
   res.json(data)
 })
-router.put('/:id/toggle-activo', authenticate, requireAdmin, async (req, res) => {
+router.put('/:id/toggle-activo', autenticar, requerirAdmin, async (req, res) => {
   const id = parseInt(req.params.id)
   const p = await prisma.proveedor.findUnique({ where: { id } })
   const data = await prisma.proveedor.update({ where: { id }, data: { activo: !p.activo } })
   res.json(data)
 })
-router.delete('/:id', authenticate, requireAdmin, async (req, res) => {
+router.delete('/:id', autenticar, requerirAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id)
     const productosActivos = await prisma.producto.count({ where: { proveedorId: id, activo: true } })

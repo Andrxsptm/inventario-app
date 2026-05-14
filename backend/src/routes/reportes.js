@@ -1,11 +1,11 @@
 import { Router } from 'express'
 import { PrismaClient } from '@prisma/client'
-import { authenticate } from '../middleware/auth.js'
+import { autenticar } from '../middleware/auth.js'
 const router = Router()
 const prisma = new PrismaClient()
 
 // GET /api/reportes/dashboard
-router.get('/dashboard', authenticate, async (req, res) => {
+router.get('/dashboard', autenticar, async (req, res) => {
   const esAdmin = req.user.rol === 'ADMINISTRADOR'
   const usuarioId = req.user.id
 
@@ -48,7 +48,7 @@ router.get('/dashboard', authenticate, async (req, res) => {
 })
 
 // GET /api/reportes/ventas?desde=&hasta=
-router.get('/ventas', authenticate, async (req, res) => {
+router.get('/ventas', autenticar, async (req, res) => {
   const esAdmin = req.user.rol === 'ADMINISTRADOR'
   const { desde, hasta } = req.query
   const filtroUsuario = esAdmin ? {} : { usuarioId: req.user.id }

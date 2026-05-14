@@ -31,7 +31,7 @@ function ModalProducto({ initial, onClose, onSaved }) {
     api.get('/proveedores').then(r => setProveedores(r.data.filter(p => p.activo))).catch(() => {})
   }, [])
 
-  async function handleSave() {
+  async function manejarGuardado() {
     if (!form.nombre.trim())   { setError('El nombre es obligatorio.');          return }
     if (!form.proveedorId)     { setError('Selecciona un proveedor.');           return }
     if (!form.precioCompra || Number(form.precioCompra) <= 0) { setError('El precio de compra es obligatorio y debe ser mayor a 0.'); return }
@@ -175,7 +175,7 @@ function ModalProducto({ initial, onClose, onSaved }) {
                 Cancelar
               </button>
               <button
-                onClick={handleSave}
+                onClick={manejarGuardado}
                 disabled={saving}
                 className="flex-[2] py-2.5 text-xs font-black uppercase tracking-widest text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-60 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
               >
@@ -193,7 +193,7 @@ function ModalProducto({ initial, onClose, onSaved }) {
 /* ────────────────────────────────────────────────── */
 /* KPI Card — un producto                            */
 /* ────────────────────────────────────────────────── */
-function ProductCard({ producto: p, onEdit, onDelete }) {
+function TarjetaProductoCatalogo({ producto: p, onEdit, onDelete }) {
   const stockOk  = p.stockActual > p.stockMinimo
   const margin   = p.precioCompra > 0
     ? (((p.precioVenta - p.precioCompra) / p.precioCompra) * 100).toFixed(0)
@@ -307,7 +307,7 @@ export default function Productos() {
     proveedorId: '',
   })
 
-  function setF(key, val) { setFilters(f => ({ ...f, [key]: val })) }
+  function establecerFiltro(key, val) { setFilters(f => ({ ...f, [key]: val })) }
 
   const activeCount = [
     filters.stockDir && filters.stockVal !== '',
@@ -315,11 +315,11 @@ export default function Productos() {
     filters.proveedorId !== '',
   ].filter(Boolean).length
 
-  function clearFilters() {
+  function limpiarFiltros() {
     setFilters({ stockDir: '', stockVal: '', estado: '', proveedorId: '' })
   }
 
-  function load() {
+  function cargar() {
     setLoading(true)
     api.get('/productos')
       .then(r => setProductos(r.data))
@@ -328,7 +328,7 @@ export default function Productos() {
   }
 
   useEffect(() => {
-    load()
+    cargar()
     api.get('/proveedores').then(r => setProveedores(r.data.filter(p => p.activo))).catch(() => {})
   }, [])
 
@@ -337,7 +337,7 @@ export default function Productos() {
       await api.delete(`/productos/${p.id}`)
       setConfirmDel(null)
       setDelError('')
-      load()
+      cargar()
     } catch (e) {
       const msg = e?.response?.data?.error || 'Error al eliminar producto'
       setDelError(msg)
@@ -373,7 +373,7 @@ export default function Productos() {
         <ModalProducto
           initial={modal === 'new' ? null : modal}
           onClose={() => setModal(null)}
-          onSaved={load}
+          onSaved={cargar}
         />
       )}
 
@@ -487,7 +487,7 @@ export default function Productos() {
                   </p>
                   {activeCount > 0 && (
                     <button
-                      onClick={clearFilters}
+                      onClick={limpiarFiltros}
                       className="text-[9px] font-black text-red-400 hover:text-red-600 uppercase tracking-widest flex items-center gap-1 transition-colors"
                     >
                       <X size={10} /> Limpiar todo
@@ -502,7 +502,7 @@ export default function Productos() {
                     <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Cantidad de stock</label>
                     <div className="flex gap-1.5">
                       <button
-                        onClick={() => setF('stockDir', filters.stockDir === 'gt' ? '' : 'gt')}
+                        onClick={() => establecerFiltro('stockDir', filters.stockDir === 'gt' ? '' : 'gt')}
                         className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl border-2 transition-all ${
                           filters.stockDir === 'gt'
                             ? 'bg-blue-50 border-blue-300 text-blue-600'
@@ -512,7 +512,7 @@ export default function Productos() {
                         &gt; Mayor
                       </button>
                       <button
-                        onClick={() => setF('stockDir', filters.stockDir === 'lt' ? '' : 'lt')}
+                        onClick={() => establecerFiltro('stockDir', filters.stockDir === 'lt' ? '' : 'lt')}
                         className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl border-2 transition-all ${
                           filters.stockDir === 'lt'
                             ? 'bg-blue-50 border-blue-300 text-blue-600'
@@ -526,7 +526,7 @@ export default function Productos() {
                       type="number" min={0}
                       placeholder="Valor de stock..."
                       value={filters.stockVal}
-                      onChange={e => setF('stockVal', e.target.value)}
+                      onChange={e => establecerFiltro('stockVal', e.target.value)}
                       disabled={!filters.stockDir}
                       className="w-full bg-gray-50 border-2 border-gray-100 focus:border-blue-300 rounded-xl px-3 py-2 text-xs font-bold text-gray-700 outline-none transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     />
@@ -539,7 +539,7 @@ export default function Productos() {
                       {ESTADOS.map(e => (
                         <button
                           key={e.value}
-                          onClick={() => setF('estado', filters.estado === e.value ? '' : e.value)}
+                          onClick={() => establecerFiltro('estado', filters.estado === e.value ? '' : e.value)}
                           className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl border-2 transition-all ${
                             filters.estado === e.value
                               ? 'bg-blue-50 border-blue-300 text-blue-600'
@@ -557,7 +557,7 @@ export default function Productos() {
                     <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Proveedor</label>
                     <div className="flex flex-wrap gap-1.5">
                       <button
-                        onClick={() => setF('proveedorId', '')}
+                        onClick={() => establecerFiltro('proveedorId', '')}
                         className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl border-2 transition-all ${
                           filters.proveedorId === ''
                             ? 'bg-blue-50 border-blue-300 text-blue-600'
@@ -569,7 +569,7 @@ export default function Productos() {
                       {proveedores.map(pv => (
                         <button
                           key={pv.id}
-                          onClick={() => setF('proveedorId', filters.proveedorId === String(pv.id) ? '' : String(pv.id))}
+                          onClick={() => establecerFiltro('proveedorId', filters.proveedorId === String(pv.id) ? '' : String(pv.id))}
                           className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl border-2 transition-all ${
                             filters.proveedorId === String(pv.id)
                               ? 'bg-blue-50 border-blue-300 text-blue-600'
@@ -609,7 +609,7 @@ export default function Productos() {
             expandido ? 'max-h-[60vh] lg:max-h-[780px] overflow-y-auto custom-scrollbar' : ''
           }`}>
             {productosVisibles.map(p => (
-              <ProductCard
+              <TarjetaProductoCatalogo
                 key={p.id}
                 producto={p}
                 onEdit={prod => setModal(prod)}
