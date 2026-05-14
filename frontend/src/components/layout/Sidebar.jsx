@@ -57,7 +57,7 @@ export default function Sidebar() {
             </div>
             <div className={`flex flex-col transition-all duration-300 ${collapsed ? 'opacity-0 w-0 invisible -translate-x-4' : 'opacity-100 w-auto visible translate-x-0'}`}>
               <span className="text-gray-900 font-extrabold text-xl tracking-tighter leading-none">
-                Stock<span className="text-violet-600">er</span>
+                Stock<span className="text-violet-600">lat</span>
               </span>
               <span className="text-[15px] text-gray-400 font-bold uppercase tracking-widest mt-1 whitespace-nowrap">
                 Manager

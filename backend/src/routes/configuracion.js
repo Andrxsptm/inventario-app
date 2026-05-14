@@ -44,7 +44,7 @@ router.post('/backup-sql', autenticar, requerirAdmin, async (req, res) => {
   if (!directUrl) return res.status(500).json({ error: 'No se encontró la URL de conexión a la base de datos' })
 
   const fecha = new Date().toISOString().slice(0, 10)
-  const filename = `stocker_backup_${fecha}.sql`
+  const filename = `stocklat_backup_${fecha}.sql`
 
   try {
     // Intentar pg_dump con la cadena de conexión directa de Supabase
@@ -76,13 +76,13 @@ router.post('/backup-sql', autenticar, requerirAdmin, async (req, res) => {
       const backup = {
         version: '1.0',
         fechaBackup: new Date().toISOString(),
-        sistema: 'Stocker',
+        sistema: 'Stocklat',
         nota: 'pg_dump no disponible en este servidor. Instala PostgreSQL CLI para obtener backup SQL completo.',
         tablas: { users, productos, clientes, ventas, itemsVenta: items, proveedores, ordenesCompra: compras, itemsOrdenCompra: itemsCompra, configuracionEmpresa: config }
       }
 
       const jsonStr = JSON.stringify(backup, null, 2)
-      const jsonFilename = `stocker_backup_${fecha}.json`
+      const jsonFilename = `stocklat_backup_${fecha}.json`
       res.setHeader('Content-Type', 'application/json')
       res.setHeader('Content-Disposition', `attachment; filename="${jsonFilename}"`)
       res.send(jsonStr)

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://stockerweb.vercel.app/sitemap.xml
+Sitemap: https://stocklat.vercel.app/sitemap.xml

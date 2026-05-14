@@ -13,7 +13,7 @@ export default function Configuracion() {
   const [notifications, setNotifications] = useState(true)
   const [isBackingUp, setIsBackingUp] = useState(false)
   const [backups, setBackups] = useState(() => {
-    const saved = localStorage.getItem('stocker_backups')
+    const saved = localStorage.getItem('stocklat_backups')
     return saved ? JSON.parse(saved) : []
   })
 
@@ -61,7 +61,7 @@ export default function Configuracion() {
       const res = await api.post('/configuracion/backup-sql', {}, { responseType: 'blob' })
       const contentDisp = res.headers['content-disposition'] || ''
       const match = contentDisp.match(/filename="?([^"]+)"?/)
-      const filename = match ? match[1] : `stocker_backup_${new Date().toISOString().slice(0,10)}.sql`
+      const filename = match ? match[1] : `stocklat_backup_${new Date().toISOString().slice(0,10)}.sql`
       const isSql = filename.endsWith('.sql')
 
       const blob = new Blob([res.data], { type: isSql ? 'application/sql' : 'application/json' })
@@ -80,7 +80,7 @@ export default function Configuracion() {
       }
       const updatedBackups = [newBackup, ...backups].slice(0, 5)
       setBackups(updatedBackups)
-      localStorage.setItem('stocker_backups', JSON.stringify(updatedBackups))
+      localStorage.setItem('stocklat_backups', JSON.stringify(updatedBackups))
     } catch (err) {
       alert('Error al generar el respaldo: ' + (err.response?.data?.error || err.message))
     } finally {
@@ -132,7 +132,7 @@ export default function Configuracion() {
       color: 'text-blue-500',
       bg: 'bg-blue-50',
       items: [
-        { label: 'Documentación stocker', desc: 'Guía completa de módulos', action: <button className="p-2 bg-gray-50 rounded-xl hover:bg-blue-50 text-blue-500 transition-colors"><ExternalLink size={16} /></button> },
+        { label: 'Documentación stocklat', desc: 'Guía completa de módulos', action: <button className="p-2 bg-gray-50 rounded-xl hover:bg-blue-50 text-blue-500 transition-colors"><ExternalLink size={16} /></button> } ,
         { label: 'Historial de Cambios', desc: 'Ver novedades de la v2.4', action: <button className="p-2 bg-gray-50 rounded-xl hover:bg-gray-100 text-gray-500 transition-colors"><History size={16} /></button> }
       ]
     }
@@ -160,7 +160,7 @@ export default function Configuracion() {
              </div>
              Ajustes del Sistema
           </h1>
-          <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">Configuración central de Stocker</p>
+          <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">Configuración central de Stocklat</p>
         </div>
         <div className="w-full sm:w-auto">
           <Button onClick={manejarRespaldo} icon={Database} disabled={isBackingUp || !esAdmin}>

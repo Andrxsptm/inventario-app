@@ -49,10 +49,10 @@ export default function Login() {
           {/* Brand */}
           <div className="flex flex-col items-center mb-8">
             <div className="w-14 h-14 bg-violet-50 border border-violet-100 rounded-2xl flex items-center justify-center shadow-sm mb-4">
-              <img src={logo} alt="Stocker logo" className="w-9 h-9 object-contain" />
+              <img src={logo} alt="Stocklat logo" className="w-9 h-9 object-contain" />
             </div>
             <h1 className="text-2xl font-black text-gray-900 tracking-tighter leading-none">
-              Stock<span className="text-violet-600">er</span>
+              Stock<span className="text-violet-600">lat</span>
             </h1>
           </div>
 
