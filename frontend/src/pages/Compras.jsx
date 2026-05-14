@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ShoppingBag, Truck, Tag, ChevronRight, ChevronDown, Loader2, X, Plus, Trash2, CheckCircle2 } from 'lucide-react'
+import { ShoppingBag, Truck, Tag, ChevronRight, ChevronDown, Loader2, X, Plus, Trash2, CheckCircle2, Search, Filter } from 'lucide-react'
 import api from '../services/api'
 import Button from '../components/common/Button'
 
@@ -344,6 +344,8 @@ export default function Compras() {
   const [error,         setError]         = useState(null)
   const [showModal,     setShowModal]     = useState(false)
   const [selectedOrden, setSelectedOrden] = useState(null)
+  const [busqueda,      setBusqueda]      = useState('')
+  const [filtroEstado,  setFiltroEstado]  = useState('TODOS')
 
   async function marcarRecibida(id) {
     if (!window.confirm('¿Confirmas que recibiste esta orden? El stock de los productos se actualizará automáticamente.')) return
@@ -364,6 +366,18 @@ export default function Compras() {
   }
 
   useEffect(() => { cargar() }, [])
+
+  const comprasFiltradas = compras.filter(c => {
+    const coincideBusqueda = 
+      String(c.id).includes(busqueda) || 
+      c.proveedor?.nombre?.toLowerCase().includes(busqueda.toLowerCase())
+    
+    const coincideEstado = 
+      filtroEstado === 'TODOS' || 
+      c.estado === filtroEstado
+
+    return coincideBusqueda && coincideEstado
+  })
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10 uppercase tracking-tighter">
@@ -387,6 +401,39 @@ export default function Compras() {
         </div>
       </div>
 
+      {/* Filtros */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <div className="md:col-span-8 relative group">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-amber-500 transition-colors pointer-events-none">
+            <Search size={18} />
+          </div>
+          <input
+            type="text"
+            placeholder="Buscar por OC o Proveedor..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="w-full bg-white border-2 border-gray-50 focus:border-amber-400 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-gray-700 outline-none transition-all shadow-sm hover:border-gray-100"
+          />
+        </div>
+        <div className="md:col-span-4 relative group">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-amber-500 transition-colors pointer-events-none">
+            <Filter size={18} />
+          </div>
+          <select
+            value={filtroEstado}
+            onChange={(e) => setFiltroEstado(e.target.value)}
+            className="w-full bg-white border-2 border-gray-50 focus:border-amber-400 rounded-2xl py-3.5 pl-12 pr-10 text-sm font-bold text-gray-700 outline-none transition-all shadow-sm hover:border-gray-100 appearance-none cursor-pointer"
+          >
+            <option value="TODOS">Todos los estados</option>
+            <option value="PENDIENTE">Pendientes</option>
+            <option value="RECIBIDA">Recibidas</option>
+          </select>
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300 group-focus-within:text-amber-500 transition-colors">
+            <ChevronDown size={18} />
+          </div>
+        </div>
+      </div>
+
       {error && (
         <div className="bg-red-50 border border-red-100 text-red-600 text-xs font-bold px-4 py-3 rounded-xl">{error}</div>
       )}
@@ -400,63 +447,67 @@ export default function Compras() {
         <p className="text-center text-gray-300 text-sm font-bold py-10">No hay órdenes de compra registradas</p>
       ) : (
         <div className="space-y-4">
-          {compras.map(c => (
-            <div key={c.id} className="bg-white p-6 rounded-3xl border border-gray-100 flex flex-col lg:flex-row items-start lg:items-center gap-6 hover:translate-x-2 transition-transform">
-              <div className="flex items-center gap-5">
-                <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-100">
-                  <ShoppingBag size={32} />
+          {comprasFiltradas.length === 0 ? (
+            <p className="text-center text-gray-300 text-sm font-bold py-10">No se encontraron resultados para la búsqueda</p>
+          ) : (
+            comprasFiltradas.map(c => (
+              <div key={c.id} className="bg-white p-6 rounded-3xl border border-gray-100 flex flex-col lg:flex-row items-start lg:items-center gap-6 hover:translate-x-2 transition-transform shadow-sm">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-100">
+                    <ShoppingBag size={32} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-gray-800">OC-{String(c.id).padStart(3, '0')}</h3>
+                    <div className="flex flex-col mt-0.5">
+                      <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Creada: {new Date(c.fecha).toLocaleDateString('es')}</p>
+                      {c.fechaEntrega && (
+                        <p className="text-[10px] text-amber-500 uppercase font-black tracking-widest">Entrega: {new Date(c.fechaEntrega).toLocaleDateString('es')}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-black text-gray-800">OC-{String(c.id).padStart(3, '0')}</h3>
-                  <div className="flex flex-col mt-0.5">
-                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Creada: {new Date(c.fecha).toLocaleDateString('es')}</p>
-                    {c.fechaEntrega && (
-                      <p className="text-[10px] text-amber-500 uppercase font-black tracking-widest">Entrega: {new Date(c.fechaEntrega).toLocaleDateString('es')}</p>
+
+                <div className="flex-1 lg:px-6">
+                  <div className="flex items-center gap-2 text-sm text-gray-600 font-bold mb-1">
+                    <Truck size={16} className="text-amber-500" /> {c.proveedor?.nombre ?? '—'}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <Tag size={14} /> {c.items?.length ?? 0} Productos en la orden
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between lg:justify-end gap-10 w-full lg:w-auto pt-4 lg:pt-0 border-t lg:border-t-0 border-gray-50">
+                  <div className="text-right">
+                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Inversión</p>
+                    <p className="text-2xl font-black text-gray-900">${c.total.toLocaleString('es', { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <div className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest ${
+                      c.estado === 'RECIBIDA'  ? 'bg-green-100 text-green-700'  :
+                      c.estado === 'CANCELADA' ? 'bg-red-100 text-red-700'     :
+                                                 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {c.estado}
+                    </div>
+                    {c.estado === 'PENDIENTE' && (
+                      <button 
+                        onClick={() => marcarRecibida(c.id)}
+                        className="text-[10px] font-black uppercase tracking-widest text-amber-600 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        Marcar Recibida
+                      </button>
                     )}
                   </div>
+                  <button 
+                    onClick={() => setSelectedOrden(c)}
+                    className="p-3 bg-gray-50 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-2xl transition-all"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
                 </div>
               </div>
-
-              <div className="flex-1 lg:px-6">
-                <div className="flex items-center gap-2 text-sm text-gray-600 font-bold mb-1">
-                  <Truck size={16} className="text-amber-500" /> {c.proveedor?.nombre ?? '—'}
-                </div>
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <Tag size={14} /> {c.items?.length ?? 0} Productos en la orden
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between lg:justify-end gap-10 w-full lg:w-auto pt-4 lg:pt-0 border-t lg:border-t-0 border-gray-50">
-                <div className="text-right">
-                  <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Inversión</p>
-                  <p className="text-2xl font-black text-gray-900">${c.total.toLocaleString('es', { minimumFractionDigits: 2 })}</p>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <div className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest ${
-                    c.estado === 'RECIBIDA'  ? 'bg-green-100 text-green-700'  :
-                    c.estado === 'CANCELADA' ? 'bg-red-100 text-red-700'     :
-                                               'bg-amber-100 text-amber-700'
-                  }`}>
-                    {c.estado}
-                  </div>
-                  {c.estado === 'PENDIENTE' && (
-                    <button 
-                      onClick={() => marcarRecibida(c.id)}
-                      className="text-[10px] font-black uppercase tracking-widest text-amber-600 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg transition-colors"
-                    >
-                      Marcar Recibida
-                    </button>
-                  )}
-                </div>
-                <button 
-                  onClick={() => setSelectedOrden(c)}
-                  className="p-3 bg-gray-50 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-2xl transition-all"
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       )}
     </div>
